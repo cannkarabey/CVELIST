@@ -1,7 +1,8 @@
 # Elasticsearch
 
 Projenin Amacı:  
-Bu proje, cve.org veritabanındaki 27 yıllık CVE kayıtlarını (CVEID) içeren JSON dosyalarını Elasticsearch’e yüklemek ve Kibana üzerinden sorgulamak için hazırlanmıştır. Projede dynamic mapping kullanılmakta ve sorgulamalar Kibana ve web arayüzü üzerinden yapılmaktadır. Backend olarak Node.js üzerinde Express.js kullanılmıştır. Projede aynı zamanda search optimization, text analysis & normalization, data modeling for search ve query design & optimization konuları uygulanmıştır.
+
+   Bu proje, cve.org veritabanındaki 27 yıllık CVE kayıtlarını (CVEID) içeren JSON dosyalarını Elasticsearch’e yüklemek ve Kibana üzerinden sorgulamak için hazırlanmıştır. Projede dynamic mapping kullanılmakta ve sorgulamalar Kibana ve web arayüzü üzerinden yapılmaktadır. Backend olarak Node.js üzerinde Express.js kullanılmıştır. Projede aynı zamanda search optimization, text analysis & normalization, data modeling for search ve query design & optimization konuları uygulanmıştır.
 
 Kullanılan Teknolojiler:  
 - Elasticsearch  
