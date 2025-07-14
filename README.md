@@ -1,67 +1,102 @@
-# Elasticsearch
+# CVELIST
 
-Projenin Amacı:  
+## Project Purpose
 
-   Bu proje, cve.org veritabanındaki 27 yıllık CVE kayıtlarını (CVEID) içeren JSON dosyalarını Elasticsearch’e yüklemek ve Kibana üzerinden sorgulamak için hazırlanmıştır. Projede dynamic mapping kullanılmakta ve sorgulamalar Kibana ve web arayüzü üzerinden yapılmaktadır. Backend olarak Node.js üzerinde Express.js kullanılmıştır. Projede aynı zamanda search optimization, text analysis & normalization, data modeling for search ve query design & optimization konuları uygulanmıştır.
+This project is designed to load 27 years of CVE records (CVEID) from the cve.org database into Elasticsearch and allow querying via Kibana and a web interface.  
+It uses **dynamic mapping** and applies modern search techniques including **search optimization, text analysis & normalization, data modeling for search, and query design & optimization**.  
+The backend is built with **Node.js** and **Express.js**.
 
-Kullanılan Teknolojiler:  
-- Elasticsearch  
-- Kibana  
-- Node.js  
-- Express.js  
-- @elastic/elasticsearch  
-- HTML/CSS (UI için)  
+---
+
+## Technologies Used
+
+- Elasticsearch
+- Kibana
+- Node.js
+- Express.js
+- @elastic/elasticsearch
+- HTML/CSS (for UI)
 - EJS (template engine)
 
-Kurulum:  
-1. Elasticsearch ve Kibana Docker container’larını çalıştırın.  
-2. Proje dizininde terminal açarak aşağıdaki komutu çalıştırın:  
+---
+
+## Setup
+
+1. Start the Elasticsearch and Kibana Docker containers.
+2. In the project directory, install dependencies:
+   ```bash
    npm install
+   ```
 
-Çalıştırma:  
-1. Elasticsearch ve Kibana’nın çalıştığından emin olun.  
-2. Proje dizininde aşağıdaki komutu çalıştırarak server’ı başlatın:  
-   npm start  
-3. Tarayıcıdan http://localhost:3000 adresine giderek web UI’ye ulaşabilirsiniz.  
-4. Kibana için tarayıcıdan http://localhost:5601 adresine gidin.
+---
 
-Proje Yapısı:  
-CVELIST/  
-├── package.json  
-├── README.txt  
-├── cves/                     # CVE JSON dosyalarının bulunduğu klasör  
-├── app.js                    # CVE dosyalarının dizinlerini çıkaran optimize kod  
-├── src/  
-│   ├── elastic/              # Elasticsearch bağlantısı ve servis katmanı  
-│   │   ├── elasticClient.js  
-│   │   ├── indexService.js  
-│   │   ├── mappingService.js  
-│   │   ├── bulkInsertService.js  
-│   │   └── searchService.js  
-│   ├── controllers/          # HTTP request/controller mantığı  
-│   │   └── cveController.js  
-│   ├── routes/               # Express.js route tanımları  
-│   │   └── cveRoutes.js  
-│   ├── views/                # UI (HTML/EJS)  
-│   │   └── index.ejs  
-│   └── server.js             # Express.js server giriş noktası
+## Running
 
-RESTful API Endpointleri:  
-- GET /cve                 : Tüm kayıtları getirir  
-- POST /cve/search         : Kullanıcının formdan gönderdiği aramayı yapar  
-- POST /cve/bulkload       : CVE JSON verilerini Elasticsearch’e yükler
+1. Make sure Elasticsearch and Kibana are up and running.
+2. Start the server:
+   ```bash
+   npm start
+   ```
+3. Open the web UI in your browser: [http://localhost:3000](http://localhost:3000)  
+4. Open Kibana in your browser: [http://localhost:5601](http://localhost:5601)
 
-Önemli Notlar:  
-- Dynamic mapping ve custom analyzer ile case-insensitive, normalize edilmiş veriler yüklenir.  
-- Versiyon numaraları ayrı bir field olarak işlenir ve sıralama yapılabilir.  
-- Kibana üzerinden verilerinizi sorgulayabilir ve görselleştirebilirsiniz.  
-- cves/ dizini içinde toplam 300,000+ JSON dosyası bulunmaktadır.  
-- app.js dosyası, bu dizini tarayarak verilerin dizinlerini optimize bir şekilde çıkarır.  
-- Projede search optimization, text analysis & normalization, data modeling for search ve query design & optimization prensipleri uygulanmıştır.
+---
 
-Katmanlar:  
-- elastic/       : Elasticsearch bağlantısı ve işlemler  
-- controllers/   : HTTP isteklerini karşılayan mantık  
-- routes/        : HTTP endpoint tanımları  
-- views/         : Kullanıcı arayüzü  
-- server.js      : Express.js server başlatma
+## Project Structure
+
+```
+CVELIST/
+├── package.json
+├── README.md
+├── cves/                     # Directory containing CVE JSON files
+├── app.js                    # Optimized code for scanning CVE file paths
+├── src/
+│   ├── elastic/              # Elasticsearch client and service layer
+│   │   ├── elasticClient.js
+│   │   ├── indexService.js
+│   │   ├── mappingService.js
+│   │   ├── bulkInsertService.js
+│   │   └── searchService.js
+│   ├── controllers/          # HTTP request/controller logic
+│   │   └── cveController.js
+│   ├── routes/               # Express.js route definitions
+│   │   └── cveRoutes.js
+│   ├── views/                # UI (HTML/EJS templates)
+│   │   └── index.ejs
+│   └── server.js             # Entry point for Express.js server
+```
+
+---
+
+## RESTful API Endpoints
+
+- `GET /cve` &mdash; Retrieve all records
+- `POST /cve/search` &mdash; Perform a search query submitted via form
+- `POST /cve/bulkload` &mdash; Load CVE JSON data into Elasticsearch
+
+---
+
+## Notes
+
+- Data is loaded with **dynamic mapping** and a **custom analyzer** for case-insensitive and normalized search.
+- Version numbers are indexed as a separate field and can be used for sorting.
+- Data and results can be queried and visualized via Kibana.
+- The `cves/` directory contains over **300,000 JSON files**.
+- The `app.js` script scans this directory and outputs optimized paths to the files.
+- The project applies principles of:
+  - Search Optimization
+  - Text Analysis & Normalization
+  - Data Modeling for Search
+  - Query Design & Optimization
+
+---
+
+## Layers
+
+- **elastic/** &mdash; Elasticsearch client and operations
+- **controllers/** &mdash; HTTP request handling logic
+- **routes/** &mdash; HTTP endpoint definitions
+- **views/** &mdash; User interface templates
+- **server.js** &mdash; Starts the Express.js server
+
+---
