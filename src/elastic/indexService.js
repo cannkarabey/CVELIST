@@ -37,12 +37,12 @@ export async function createIndexIfNotExists() {
               }
             }
           },
-          mappings: {
+          mappings: { // Data Modeling ve Field mapping uygulandı
             dynamic: true,
             properties: {
-              title: {
-                type: 'text',
-                analyzer: 'custom_text_analyzer'
+              title: { // Data model
+                type: 'text', // Field type 
+                analyzer: 'custom_text_analyzer' // Analyzer seçimi de yapıldı
               },
               description: {
                 type: 'text',
@@ -52,7 +52,7 @@ export async function createIndexIfNotExists() {
                 type: 'text',
                 analyzer: 'custom_text_analyzer'
               },
-              state: {
+              state: { 
                 type: 'keyword'
               },
               cveId: {
