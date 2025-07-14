@@ -9,10 +9,11 @@ import client from './elasticClient.js';
 
 const INDEX_NAME = 'cvelist';
 
-// Basit match search
+// Basit match search (full-text için önerilir)
 export async function simpleSearch(query) {
   return await client.search({
     index: INDEX_NAME,
+    _source: ['cveId', 'title', 'description', 'datePublished'], // sadece gerekli alanlar
     body: {
       query: {
         match: {
@@ -24,7 +25,6 @@ export async function simpleSearch(query) {
 }
 
 // Relevance Tuning, Field Boosting, Document Boosting ve Scoring optimizasyonları uygular.
-
 export async function boostedSearch(query) {
   return await client.search({
     index: INDEX_NAME,
@@ -72,7 +72,7 @@ export async function boostedSearch(query) {
   });
 }
 
-// Fuzzy search (yazım hatalarına toleranslı)
+// Fuzzy search (yazım hatalarına toleranslı, kısa kelimelerde dikkatli olun)
 export async function fuzzySearch(query) {
   return await client.search({
     index: INDEX_NAME,
@@ -80,8 +80,8 @@ export async function fuzzySearch(query) {
       query: {
         match: {
           title: {
-            query: query,
-            fuzziness: 'AUTO'
+            query,
+            fuzziness: 'AUTO' // otomatik olarak kelimenin uzunluğuna göre belirlenir
           }
         }
       }
@@ -89,34 +89,35 @@ export async function fuzzySearch(query) {
   });
 }
 
-// Range search (tarih veya versiyon)
+// Range search (ör. tarih veya versiyon aralığı için)
 export async function rangeSearch({ field, gte, lte }) {
   return await client.search({
     index: INDEX_NAME,
+    _source: ['cveId', 'title', 'datePublished'], // sadece ilgili alanları döndür
     body: {
       query: {
         range: {
-          [field]: {
-            gte,
-            lte
-          }
+          [field]: { gte, lte }
         }
-      }
+      },
+      sort: [
+        { [field]: { order: 'asc' } } // tarih/versiyon sıralı gelsin
+      ]
     }
   });
 }
 
-// Bool search (çoklu koşul)
+// Bool search (çoklu koşul — full-text ve filtreleri bir arada)
 export async function boolSearch({ keyword, state, dateFrom, dateTo }) {
   return await client.search({
     index: INDEX_NAME,
     body: {
       query: {
-        bool: {
-          must: [
+        bool: { // bool queies yapılan kısım
+          must: [ // must içinde bir tane match (full-text, relevance içeren)
             { match: { title: keyword } }
           ],
-          filter: [
+          filter: [ // filter içinde term (exact match, skor etkilemez, daha hızlı) ve range (tarih aralığı, skor etkilemez)
             { term: { state } },
             { range: { datePublished: { gte: dateFrom, lte: dateTo } } }
           ]
@@ -125,4 +126,20 @@ export async function boolSearch({ keyword, state, dateFrom, dateTo }) {
     }
   });
 }
+
+// Profiled search (performans test etmek için)
+export async function profiledSearch(query) {
+  return await client.search({
+    index: INDEX_NAME,
+    body: {
+      profile: true,
+      query: {
+        match: {
+          title: query
+        }
+      }
+    }
+  });
+}
+
 
