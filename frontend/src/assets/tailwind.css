@@ -1,0 +1,4 @@
+/* Bu CSS dosyası Tailwind’in bütün stillerini projeye dahil eder.*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
