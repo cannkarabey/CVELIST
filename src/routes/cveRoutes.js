@@ -1,27 +1,15 @@
 import express from 'express';
-import {
-  homePage,
-  searchCVE,
-  rangeSearchCVE,
-  boolSearchCVE,
-  bulkLoad
-} from '../controllers/cveController.js';
+import { getAllCves, searchCves, getCveById } from '../controllers/cveController.js';
 
 const router = express.Router();
 
-// GET / → Ana sayfa (UI)
-router.get('/', homePage);
+// GET /api/cve → Tüm CVE kayıtlarından ilk 100
+router.get('/', getAllCves);
 
-// POST /search → Basit/boosted/fuzzy arama
-router.post('/search', searchCVE);
+// POST /api/cve/search → Arama (query: …)
+router.post('/search', searchCves);
 
-// POST /range-search → Range sorgusu
-router.post('/range-search', rangeSearchCVE);
-
-// POST /bool-search → Bool sorgusu
-router.post('/bool-search', boolSearchCVE);
-
-// POST /bulkload → JSON verilerini Elasticsearch’e yükle
-router.post('/bulkload', bulkLoad);
+// GET /api/cve/:cveId → Belirli CVE ID
+router.get('/:cveId', getCveById);
 
 export default router;

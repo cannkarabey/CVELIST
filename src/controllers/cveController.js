@@ -1,64 +1,67 @@
-// src/controllers/cveController.js
+import client from '../elastic/elasticClient.js';
+import { boostedSearch } from '../elastic/searchService.js';
 
-import { simpleSearch, boostedSearch, fuzzySearch, rangeSearch, boolSearch, profiledSearch} from '../elastic/searchService.js';
-import { bulkInsertCves, sendBatch, extractVersionFromTitle, transformCveJson } from '../elastic/bulkInsertService.js';
+const INDEX_NAME = 'cvelist';
 
-export async function homePage(req, res) {
-  res.render('index', { title: 'CVE Search' });
-}
+// GET /api/cve/:cveId → tek bir CVE ID döner
+export async function getCveById(req, res) {
+  const { cveId } = req.params;
 
-export async function searchCVE(req, res) {
   try {
-    const { query, type } = req.body;
-    let results;
+    const result = await client.search({
+      index: INDEX_NAME,
+      body: {
+        query: { term: { cveId: cveId } }
+      }
+    });
 
-    switch (type) {
-      case 'boosted':
-        results = await boostedSearch(query);
-        break;
-      case 'fuzzy':
-        results = await fuzzySearch(query);
-        break;
-      default:
-        results = await simpleSearch(query);
-        break;
+    if (result.hits.hits.length === 0) {
+      return res.status(404).json({ error: 'CVE not found' });
     }
 
-    res.json(results.hits.hits);
+    res.json(result.hits.hits[0]._source);
   } catch (err) {
-    console.error('Search error:', err);
-    res.status(500).json({ error: 'Search failed' });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
-export async function rangeSearchCVE(req, res) {
+// POST /api/cve/search → arama yapar ve sonuçları liste halinde döner
+export async function searchCves(req, res) {
+  const { query } = req.body;
+
+  if (!query) {
+    return res.status(400).json({ error: 'Query is required' });
+  }
+
   try {
-    const { field, gte, lte } = req.body;
-    const results = await rangeSearch({ field, gte, lte });
-    res.json(results.hits.hits);
+    const result = await boostedSearch(query);
+
+    const cves = result.hits.hits.map(hit => hit._source);
+
+    res.json({ cves });
   } catch (err) {
-    console.error('Range search error:', err);
-    res.status(500).json({ error: 'Range search failed' });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
-export async function boolSearchCVE(req, res) {
+// GET /api/cve → (isteğe bağlı) tüm CVE kayıtlarını getirir (sınırlı sayıda)
+export async function getAllCves(req, res) {
   try {
-    const { keyword, state, dateFrom, dateTo } = req.body;
-    const results = await boolSearch({ keyword, state, dateFrom, dateTo });
-    res.json(results.hits.hits);
-  } catch (err) {
-    console.error('Bool search error:', err);
-    res.status(500).json({ error: 'Bool search failed' });
-  }
-}
+    const result = await client.search({
+      index: INDEX_NAME,
+      body: {
+        size: 100, // sadece 100 kayıt getir
+        query: { match_all: {} }
+      }
+    });
 
-export async function bulkLoad(req, res) {
-  try {
-    const result = await bulkInsert();
-    res.json({ success: true, result });
+    const cves = result.hits.hits.map(hit => hit._source);
+
+    res.json({ cves });
   } catch (err) {
-    console.error('Bulk insert error:', err);
-    res.status(500).json({ error: 'Bulk insert failed' });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
