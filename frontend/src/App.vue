@@ -1,19 +1,21 @@
 <template>
-  <div class="container mt-5">
-    <h1 class="text-center text-primary">CVELIST UI</h1>
-    <p class="text-center">Welcome! Start building your app here 🚀</p>
-
-    <HelloWorld />
+  <div id="app">
+    <Navbar />
+    <router-view />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Navbar from './components/Navbar.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    Navbar
   }
 }
 </script>
+
+<style>
+/* Global stiller gerekirse */
+</style>
