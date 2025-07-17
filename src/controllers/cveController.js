@@ -1,7 +1,7 @@
 // src/controllers/cveController.js
 
-import { simpleSearch, boostedSearch, fuzzySearch, rangeSearch, boolSearch } from '../elastic/searchService.js';
-import { bulkInsert } from '../elastic/bulkInsertService.js';
+import { simpleSearch, boostedSearch, fuzzySearch, rangeSearch, boolSearch, profiledSearch} from '../elastic/searchService.js';
+import { bulkInsertCves, sendBatch, extractVersionFromTitle, transformCveJson } from '../elastic/bulkInsertService.js';
 
 export async function homePage(req, res) {
   res.render('index', { title: 'CVE Search' });

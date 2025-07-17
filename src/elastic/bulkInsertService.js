@@ -36,7 +36,7 @@ export async function bulkInsertCves(files) {
   console.log(`Yükleme tamamlandı.`);
 }
 
-async function sendBatch(batch) {
+export async function sendBatch(batch) {
   try {
     const { errors, items } = await client.bulk({ body: batch });
 
@@ -55,7 +55,7 @@ async function sendBatch(batch) {
 
 // Versiyon ayıklama & title normalize helper 
 
-function extractVersionFromTitle(title) {
+export function extractVersionFromTitle(title) {
   const regex = /(.*?)(\s\d+(\.\d+)*$)/;  // Örn: "WhatsApp Desktop 0.3.4932"
   const match = title.match(regex);
 
@@ -72,7 +72,7 @@ function extractVersionFromTitle(title) {
   }
 }
 
-function transformCveJson(json) {
+export function transformCveJson(json) {
   const rawTitle = json.containers?.cna?.title || '';
 
   const { cleanTitle, version } = extractVersionFromTitle(rawTitle);
