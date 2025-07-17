@@ -1,6 +1,7 @@
 {
   "name": "cvelist",
   "version": "1.0.0",
+  "type": "module",
   "description": "Projenin Amacı:\r Bu proje, cve.org veritabanındaki 27 yıllık CVE kayıtlarını (CVEID) içeren JSON dosyalarını Elasticsearch’e yüklemek ve Kibana üzerinden sorgulamak için hazırlanmıştır. Projede dynamic mapping kullanılmakta ve sorgulamalar Kibana ve web arayüzü üzerinden yapılmaktadır. Backend olarak Node.js üzerinde Express.js kullanılmıştır.",
   "main": "app.js",
   "scripts": {
@@ -11,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@elastic/elasticsearch": "^9.0.3"
+    "@elastic/elasticsearch": "^9.0.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
   }
 }
