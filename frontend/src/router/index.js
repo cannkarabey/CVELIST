@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../pages/Dashboard.vue'
 import SearchResults from '../pages/SearchResults.vue'
 import CveDetail from '../pages/CveDetail.vue'
+import ResultsPage from '../pages/ResultsPage.vue'
 
 const routes = [
   {
