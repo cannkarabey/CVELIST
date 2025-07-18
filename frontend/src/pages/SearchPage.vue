@@ -1,69 +1,66 @@
 <template>
   <div class="container mt-5">
-    <h1 class="text-center mb-4">CVE Search</h1>
+    <h1 class="text-center text-primary mb-4">
+      <i class="bi bi-shield-lock"></i> CVE Search
+    </h1>
 
-    <form @submit.prevent="searchCves" class="row justify-content-center">
+    <div class="row justify-content-center">
       <div class="col-md-6">
-        <div class="input-group">
-          <input
-            type="text"
-            v-model="query"
-            class="form-control"
-            placeholder="Enter CVE keyword…"
-          />
-          <button type="submit" class="btn btn-primary">
-            <i class="bi bi-search"></i> Search
-          </button>
+        <form @submit.prevent="searchCve">
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              v-model="query"
+              class="form-control"
+              placeholder="CVE ID veya anahtar kelime"
+            />
+            <button type="submit" class="btn btn-primary">Search</button>
+          </div>
+        </form>
+
+        <div v-if="error" class="alert alert-danger">
+          {{ error }}
         </div>
-      </div>
-    </form>
 
-    <div class="row mt-4">
-      <div class="col text-center">
-        <p class="text-muted">
-          Example: <code>CVE-2024</code> or <code>buffer overflow</code>
-        </p>
-      </div>
-    </div>
-
-    <div v-if="error" class="alert alert-danger mt-3 text-center">
-      {{ error }}
-    </div>
-
-    <div v-if="loading" class="text-center mt-3">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading…</span>
+        <div v-if="recentSearches.length" class="mt-4 text-center">
+          <h5>Son Aramalar</h5>
+          <ul class="list-inline">
+            <li
+              v-for="q in recentSearches"
+              :key="q"
+              class="list-inline-item"
+            >
+              <button @click="query = q; searchCve()" class="btn btn-sm btn-outline-secondary">{{ q }}</button>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-export default {
-  setup() {
-    const query = ref("");
-    const error = ref("");
-    const loading = ref(false);
-    const router = useRouter();
+const query = ref('')
+const error = ref('')
+const recentSearches = ref([])
 
-    const searchCves = async () => {
-      if (!query.value.trim()) {
-        error.value = "Please enter a search keyword.";
-        return;
-      }
-      error.value = "";
-      loading.value = true;
+const router = useRouter()
 
-      setTimeout(() => {
-        loading.value = false;
-        router.push({ name: "Results", query: { q: query.value } });
-      }, 1000);
-    };
-
-    return { query, error, loading, searchCves };
-  },
-};
+const searchCve = () => {
+  if (!query.value.trim()) {
+    error.value = 'Arama terimi gerekli.'
+    return
+  }
+  error.value = ''
+  if (!recentSearches.value.includes(query.value.trim())) {
+    recentSearches.value.unshift(query.value.trim())
+    if (recentSearches.value.length > 5) {
+      recentSearches.value.pop()
+    }
+  }
+  router.push({ name: 'Results', query: { q: query.value.trim() } })
+}
 </script>

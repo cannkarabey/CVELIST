@@ -1,24 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Dashboard from '../pages/Dashboard.vue'
-import SearchResults from '../pages/SearchResults.vue'
-import CveDetail from '../pages/CveDetail.vue'
+import SearchPage from '../pages/SearchPage.vue'
 import ResultsPage from '../pages/ResultsPage.vue'
+import CveDetailPage from '../pages/CveDetailPage.vue'
 
 const routes = [
   {
     path: '/',
-    name: 'Dashboard',
-    component: Dashboard,
+    name: 'Search',
+    component: SearchPage
   },
   {
     path: '/results',
-    name: 'SearchResults',
-    component: SearchResults,
+    name: 'Results',
+    component: ResultsPage
   },
   {
     path: '/cve/:cveId',
     name: 'CveDetail',
-    component: CveDetail,
+    component: CveDetailPage
   },
   {
     path: '/:pathMatch(.*)*',
@@ -31,7 +30,7 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes
 })
 
 export default router
