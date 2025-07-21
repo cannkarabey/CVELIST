@@ -65,3 +65,31 @@ export async function getAllCves(req, res) {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+// GET /api/cve/autocomplete?query=…
+export async function autocompleteCves(req, res) {
+  const { query } = req.query;
+
+  if (!query) return res.json([]);
+
+  try {
+    const result = await client.search({
+      index: 'cvelist',
+      size: 5,
+      body: {
+        query: {
+          match_phrase_prefix: {
+            title: query
+          }
+        }
+      }
+    });
+
+    const suggestions = result.hits.hits.map(hit => hit._source.title);
+    res.json(suggestions);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

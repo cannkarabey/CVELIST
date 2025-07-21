@@ -1,31 +1,29 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container">
-      <router-link to="/" class="navbar-brand">
-        <i class="bi bi-shield-lock me-2"></i> CVE Search
-      </router-link>
-
-      <div class="ms-auto">
-        <router-link
-          to="/"
-          class="btn btn-outline-light btn-sm me-2"
-        >
-          Home
-        </router-link>
-
-        <router-link
-          to="/results"
-          class="btn btn-outline-light btn-sm"
-        >
-          Results
-        </router-link>
-      </div>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary px-5">
+    <router-link class="navbar-brand" to="/">CVE Search</router-link>
+    <div class="ms-auto d-flex gap-2">
+      <router-link to="/" class="btn btn-sm btn-outline-light">Home</router-link>
+      <router-link to="/results" class="btn btn-sm btn-outline-light">Results</router-link>
+      <button
+        class="btn btn-sm btn-outline-light"
+        @click="toggleDarkMode"
+      >
+        <i class="bi" :class="darkMode ? 'bi-moon' : 'bi-brightness-high'"></i>
+      </button>
     </div>
   </nav>
 </template>
+
 
 <script>
 export default {
   name: "Navbar",
 };
+</script>
+
+<script setup>
+const props = defineProps({
+  darkMode: Boolean,
+  toggleDarkMode: Function
+})
 </script>

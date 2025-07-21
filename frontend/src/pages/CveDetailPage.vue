@@ -5,7 +5,18 @@
     <div v-if="!cve && !error" class="spinner-border text-primary"></div>
 
     <div v-if="cve" class="mt-3">
-      <h4>{{ cve.title }}</h4>
+      <h4>
+        {{ cve.title }}
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-info ms-2"
+          data-bs-toggle="popover"
+          title="Nedir?"
+          data-bs-content="Bu CVE’nin detaylarını görmektesiniz."
+        >
+          ?
+        </button>
+      </h4>
       <p>{{ cve.description }}</p>
       <p><strong>Durum:</strong> {{ cve.state }}</p>
       <p><strong>Yayın Tarihi:</strong> {{ cve.datePublished }}</p>

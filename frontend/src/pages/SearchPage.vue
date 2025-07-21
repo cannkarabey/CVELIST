@@ -7,14 +7,40 @@
     <div class="row justify-content-center">
       <div class="col-md-6">
         <form @submit.prevent="searchCve">
-          <div class="input-group mb-3">
+          <div class="input-group mb-3 position-relative">
+            <!-- Büyüteç -->
+            <span class="input-group-text">
+              <i class="bi bi-search"></i>
+            </span>
+
+            <!-- Arama input -->
             <input
               type="text"
               v-model="query"
+              @input="fetchSuggestions"
               class="form-control"
               placeholder="CVE ID veya anahtar kelime"
             />
+
+            <!-- Search butonu -->
             <button type="submit" class="btn btn-primary">Search</button>
+
+            <!-- Öneriler -->
+            <ul
+              v-if="suggestions.length"
+              class="list-group position-absolute w-100"
+              style="z-index: 10; top: 100%;"
+            >
+              <li
+                v-for="s in suggestions"
+                :key="s"
+                @click="selectSuggestion(s)"
+                class="list-group-item list-group-item-action"
+                style="cursor: pointer;"
+              >
+                {{ s }}
+              </li>
+            </ul>
           </div>
         </form>
 
@@ -34,6 +60,35 @@
             </li>
           </ul>
         </div>
+
+        <div v-if="popularSearches.length" class="mt-4 text-center">
+          <h5>Popüler Aramalar</h5>
+          <ul class="list-inline">
+            <li
+              v-for="q in popularSearches"
+              :key="q"
+              class="list-inline-item"
+            >
+              <button @click="query = q; searchCve()" class="btn btn-sm btn-outline-primary">{{ q }}</button>
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="recentSearches.length" class="mt-4 text-center">
+          <h5>Son Aramalar</h5>
+          <ul class="list-inline">
+            <li
+              v-for="q in recentSearches"
+              :key="q"
+              class="list-inline-item"
+            >
+              <button @click="query = q; searchCve()" class="btn btn-sm btn-outline-secondary">{{ q }}</button>
+            </li>
+          </ul>
+        </div>
+        <div v-else class="text-center text-muted mt-3">
+          <h6>Henüz arama yapılmadı.</h6>
+        </div>
       </div>
     </div>
   </div>
@@ -42,10 +97,19 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 const query = ref('')
 const error = ref('')
+const suggestions = ref([])
 const recentSearches = ref([])
+const popularSearches = ref([
+  'CVE-2023-1234',
+  'SQL Injection',
+  'Buffer Overflow',
+  'XSS',
+  'Privilege Escalation'
+])
 
 const router = useRouter()
 
@@ -61,6 +125,27 @@ const searchCve = () => {
       recentSearches.value.pop()
     }
   }
+  suggestions.value = []
   router.push({ name: 'Results', query: { q: query.value.trim() } })
+}
+
+const fetchSuggestions = async () => {
+  if (!query.value.trim()) {
+    suggestions.value = []
+    return
+  }
+  try {
+    const res = await axios.get(`/api/cve/autocomplete?query=${encodeURIComponent(query.value.trim())}`)
+    suggestions.value = res.data
+  } catch (err) {
+    console.error(err)
+    suggestions.value = []
+  }
+}
+
+const selectSuggestion = (s) => {
+  query.value = s
+  suggestions.value = []
+  searchCve()
 }
 </script>
