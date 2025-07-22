@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <table class="table table-striped mt-3">
     <thead>
       <tr>
@@ -26,4 +26,4 @@ export default {
     cves: Array,
   },
 };
-</script>
+</script> -->

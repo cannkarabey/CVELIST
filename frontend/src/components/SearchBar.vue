@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <form @submit.prevent="onSearch" class="input-group my-3">
     <input
       v-model="query"
@@ -25,4 +25,4 @@ export default {
     },
   },
 };
-</script>
+</script> -->

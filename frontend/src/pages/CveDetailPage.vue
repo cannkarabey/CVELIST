@@ -1,49 +1,57 @@
 <template>
-  <div class="container mt-4">
-    <h2><i class="bi bi-exclamation-triangle text-warning"></i> {{ cve?.cveId }}</h2>
-    <div v-if="error" class="alert alert-danger">{{ error }}</div>
-    <div v-if="!cve && !error" class="spinner-border text-primary"></div>
+  <div class="container mt-5">
+    <h2>CVE Detail: {{ cveId }}</h2>
 
-    <div v-if="cve" class="mt-3">
-      <h4>
-        {{ cve.title }}
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-info ms-2"
-          data-bs-toggle="popover"
-          title="Nedir?"
-          data-bs-content="Bu CVE’nin detaylarını görmektesiniz."
-        >
-          ?
-        </button>
-      </h4>
-      <p>{{ cve.description }}</p>
-      <p><strong>Durum:</strong> {{ cve.state }}</p>
-      <p><strong>Yayın Tarihi:</strong> {{ cve.datePublished }}</p>
+    <div v-if="loading" class="text-center mt-4">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <div v-if="error" class="alert alert-danger mt-4">
+      {{ error }}
+    </div>
+
+    <div v-if="cve" class="card mt-4">
+      <div class="card-body">
+        <h5 class="card-title">{{ cve.title }}</h5>
+        <p class="card-text">{{ cve.description }}</p>
+        <p><strong>State:</strong> {{ cve.state }}</p>
+        <p><strong>Version:</strong> {{ cve.version }}</p>
+        <p><strong>Date Published:</strong> {{ cve.datePublished }}</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
+import axios from 'axios';
 
 export default {
-  name: "CveDetailPage",
+  name: 'RecordDetail',
   data() {
     return {
+      cveId: this.$route.params.cveId,
       cve: null,
-      error: "",
+      loading: true,
+      error: null,
     };
   },
-  async mounted() {
-    const { cveId } = this.$route.params;
-
-    try {
-      const res = await axios.get(`/api/cve/${cveId}`);
-      this.cve = res.data;
-    } catch (err) {
-      this.error = "CVE bulunamadı.";
-    }
+  mounted() {
+    this.fetchCveDetail();
+  },
+  methods: {
+    async fetchCveDetail() {
+      try {
+        const response = await axios.get(`/api/cve/${this.cveId}`);
+        this.cve = response.data;
+      } catch (err) {
+        this.error = 'Failed to fetch CVE detail.';
+        console.error(err);
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 };
 </script>

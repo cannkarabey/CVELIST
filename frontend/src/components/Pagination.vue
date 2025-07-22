@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <nav v-if="totalPages > 1">
     <ul class="pagination justify-content-center mt-4">
       <li
@@ -44,4 +44,4 @@ export default {
     },
   },
 };
-</script>
+</script> -->

@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="container mt-5">
     <h2>CVE Detail: {{ cveId }}</h2>
 
@@ -54,4 +54,4 @@ export default {
     },
   },
 };
-</script>
+</script> -->

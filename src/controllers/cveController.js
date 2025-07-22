@@ -1,5 +1,5 @@
 import client from '../elastic/elasticClient.js';
-import { boostedSearch } from '../elastic/searchService.js';
+import { boostedSearch, boolSearch } from '../elastic/searchService.js';
 
 const INDEX_NAME = 'cvelist';
 
@@ -11,7 +11,7 @@ export async function getCveById(req, res) {
     const result = await client.search({
       index: INDEX_NAME,
       body: {
-        query: { term: { cveId: cveId } }
+        query: { term: { 'cveMetadata.cveId.keyword': cveId } }
       }
     });
 
@@ -28,14 +28,25 @@ export async function getCveById(req, res) {
 
 // POST /api/cve/search → arama yapar ve sonuçları liste halinde döner
 export async function searchCves(req, res) {
-  const { query } = req.body;
+  const { query, state, dateFrom, dateTo } = req.body;
 
   if (!query) {
     return res.status(400).json({ error: 'Query is required' });
   }
 
   try {
-    const result = await boostedSearch(query); 
+    let result;
+
+    if (state || (dateFrom && dateTo)) {
+      result = await boolSearch({
+        keyword: query,
+        state,
+        dateFrom,
+        dateTo
+      });
+    } else {
+      result = await boostedSearch(query);
+    }
 
     const cves = result.hits.hits.map(hit => hit._source);
 
@@ -52,7 +63,7 @@ export async function getAllCves(req, res) {
     const result = await client.search({
       index: INDEX_NAME,
       body: {
-        size: 100, // sadece 100 kayıt getir
+        size: 100,
         query: { match_all: {} }
       }
     });
@@ -74,12 +85,12 @@ export async function autocompleteCves(req, res) {
 
   try {
     const result = await client.search({
-      index: 'cvelist',
+      index: INDEX_NAME,
       size: 5,
       body: {
         query: {
           match_phrase_prefix: {
-            title: query
+            'title': query
           }
         }
       }

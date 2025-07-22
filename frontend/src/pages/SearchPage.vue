@@ -19,7 +19,7 @@
               v-model="query"
               @input="fetchSuggestions"
               class="form-control"
-              placeholder="CVE ID veya anahtar kelime"
+              placeholder="CVE ID or keyword"
             />
 
             <!-- Search butonu -->
@@ -49,7 +49,7 @@
         </div>
 
         <div v-if="recentSearches.length" class="mt-4 text-center">
-          <h5>Son Aramalar</h5>
+          <h5>Recent  Searches</h5>
           <ul class="list-inline">
             <li
               v-for="q in recentSearches"
@@ -62,7 +62,7 @@
         </div>
 
         <div v-if="popularSearches.length" class="mt-4 text-center">
-          <h5>Popüler Aramalar</h5>
+          <h5>Popular Searches</h5>
           <ul class="list-inline">
             <li
               v-for="q in popularSearches"
@@ -74,8 +74,8 @@
           </ul>
         </div>
 
-        <div v-if="recentSearches.length" class="mt-4 text-center">
-          <h5>Son Aramalar</h5>
+        <!-- <div v-if="recentSearches.length" class="mt-4 text-center">
+          <h5>Recent Searches</h5>
           <ul class="list-inline">
             <li
               v-for="q in recentSearches"
@@ -87,8 +87,8 @@
           </ul>
         </div>
         <div v-else class="text-center text-muted mt-3">
-          <h6>Henüz arama yapılmadı.</h6>
-        </div>
+          <h6>There has been no search yet.</h6>
+        </div> -->
       </div>
     </div>
   </div>
@@ -104,7 +104,7 @@ const error = ref('')
 const suggestions = ref([])
 const recentSearches = ref([])
 const popularSearches = ref([
-  'CVE-2023-1234',
+  'Facebook',
   'SQL Injection',
   'Buffer Overflow',
   'XSS',
@@ -115,7 +115,7 @@ const router = useRouter()
 
 const searchCve = () => {
   if (!query.value.trim()) {
-    error.value = 'Arama terimi gerekli.'
+    error.value = 'The search term is required.'
     return
   }
   error.value = ''

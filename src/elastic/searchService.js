@@ -13,61 +13,73 @@ const INDEX_NAME = 'cvelist';
 export async function simpleSearch(query) {
   return await client.search({
     index: INDEX_NAME,
-    _source: ['cveId', 'title', 'description', 'datePublished'], // sadece gerekli alanlar
+    _source: ['cveId', 'title', 'description', 'datePublished'],
+    size: 10000, // daha fazla kayıt getir
     body: {
       query: {
         match: {
           title: query
         }
-      }
+      },
+      sort: [
+        { "datePublished": { "order": "asc" } } // en eski tarihten başla
+      ]
     }
   });
 }
 
-// Relevance Tuning, Field Boosting, Document Boosting ve Scoring optimizasyonları uygular.
 export async function boostedSearch(query) {
   return await client.search({
     index: INDEX_NAME,
+    _source: [
+      'cveId',
+      'title',
+      'description',
+      'datePublished',
+      'state'
+    ],
+    size: 10000, // mümkün olan maksimum sayı
     body: {
       query: {
         function_score: {
-          // Temel sorgu: multi_match
           query: {
             multi_match: {
-              query: query,            // Kullanıcının yazdığı kelime/terim
+              query: query,
               fields: [
-                'title^3',            // title alanı en önemli (3x boost)
-                'description^1.5',    // description alanı orta önemde (1.5x)
-                'tags^0.8'            // tags alanı daha az önemli (0.8x)
+                'title^3',
+                'description^1.5',
+                'tags^0.8'
               ],
-              type: 'best_fields'     // En iyi eşleşen field seçilir
+              type: 'best_fields'
             }
           },
-          functions: [ // Ek scoring yapar
-            { 
-              filter: { term: { state: 'published' } }, // state:published olan belgelerin skorunu artır
-              weight: 2               
+          functions: [
+            {
+              filter: { term: { state: 'published' } },
+              weight: 2
             },
             {
-              filter: { term: { state: 'deprecated' } }, // // state:deprecated olan belgelerin skorunu düşür
-              weight: 0.5           
+              filter: { term: { state: 'deprecated' } },
+              weight: 0.5
             },
             {
-              gauss: { // Tarihi daha yeni olan belgeler öne çıkarır
+              gauss: {
                 datePublished: {
-                  origin: 'now',     // Şu anki tarih
-                  scale: '30d',      // 30 gün içindekiler öncelikli
-                  offset: '5d',      // İlk 5 gün tam öncelikli
-                  decay: 0.5         // Etkisi uzak tarihlerde yarı yarıya azalır
+                  origin: 'now',
+                  scale: '30d',
+                  offset: '5d',
+                  decay: 0.5
                 }
               }
             }
           ],
-           // Skorların nasıl birleştirileceğini belirler
-          boost_mode: 'multiply',    // Ana skorla çarp
-          score_mode: 'sum'          // Tüm katkıları topla
+          boost_mode: 'multiply',
+          score_mode: 'sum'
         }
-      }
+      },
+      sort: [
+        { "datePublished": { "order": "desc" } } // yeni -> eski
+      ]
     }
   });
 }
@@ -76,15 +88,20 @@ export async function boostedSearch(query) {
 export async function fuzzySearch(query) {
   return await client.search({
     index: INDEX_NAME,
+    _source: ['cveId', 'title', 'description', 'datePublished'],
+    size: 10000,
     body: {
       query: {
         match: {
           title: {
             query,
-            fuzziness: 'AUTO' // otomatik olarak kelimenin uzunluğuna göre belirlenir
+            fuzziness: 'AUTO'
           }
         }
-      }
+      },
+      sort: [
+        { "datePublished": { "order": "asc" } }
+      ]
     }
   });
 }
@@ -93,7 +110,8 @@ export async function fuzzySearch(query) {
 export async function rangeSearch({ field, gte, lte }) {
   return await client.search({
     index: INDEX_NAME,
-    _source: ['cveId', 'title', 'datePublished'], // sadece ilgili alanları döndür
+    _source: ['cveId', 'title', 'datePublished'],
+    size: 10000,
     body: {
       query: {
         range: {
@@ -101,7 +119,7 @@ export async function rangeSearch({ field, gte, lte }) {
         }
       },
       sort: [
-        { [field]: { order: 'asc' } } // tarih/versiyon sıralı gelsin
+        { [field]: { order: 'asc' } }
       ]
     }
   });
@@ -111,18 +129,23 @@ export async function rangeSearch({ field, gte, lte }) {
 export async function boolSearch({ keyword, state, dateFrom, dateTo }) {
   return await client.search({
     index: INDEX_NAME,
+    _source: ['cveId', 'title', 'description', 'datePublished'],
+    size: 10000,
     body: {
       query: {
-        bool: { // bool queies yapılan kısım
-          must: [ // must içinde bir tane match (full-text, relevance içeren)
+        bool: {
+          must: [
             { match: { title: keyword } }
           ],
-          filter: [ // filter içinde term (exact match, skor etkilemez, daha hızlı) ve range (tarih aralığı, skor etkilemez)
+          filter: [
             { term: { state } },
             { range: { datePublished: { gte: dateFrom, lte: dateTo } } }
           ]
         }
-      }
+      },
+      sort: [
+        { "datePublished": { "order": "asc" } }
+      ]
     }
   });
 }
@@ -131,15 +154,24 @@ export async function boolSearch({ keyword, state, dateFrom, dateTo }) {
 export async function profiledSearch(query) {
   return await client.search({
     index: INDEX_NAME,
+    _source: [
+      'cveMetadata.cveId',
+      'cveMetadata.state',
+      'title',
+      'description',
+      'datePublished'
+    ],
+    size: 10000,
     body: {
       profile: true,
       query: {
         match: {
           title: query
         }
-      }
+      },
+      sort: [
+        { "datePublished": { "order": "asc" } }
+      ]
     }
   });
 }
-
-
