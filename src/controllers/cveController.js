@@ -35,7 +35,7 @@ export async function searchCves(req, res) {
   }
 
   try {
-    const result = await boostedSearch(query);
+    const result = await boostedSearch(query); 
 
     const cves = result.hits.hits.map(hit => hit._source);
 

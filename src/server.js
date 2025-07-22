@@ -23,10 +23,12 @@ app.use('/api/cve', cveRoutes);
 
 // Vue SPA fallback (isteğe bağlı, Vue routing çalışsın diye)
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../frontend/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
 });
 
 // Server başlat
 app.listen(port, () => {
   console.log(`Backend server is running on http://localhost:${port}`);
 });
+
+
