@@ -26,7 +26,7 @@
             <button type="submit" class="btn btn-primary">Search</button>
 
             <!-- Öneriler -->
-            <ul
+            <!-- <ul
               v-if="suggestions.length"
               class="list-group position-absolute w-100"
               style="z-index: 10; top: 100%;"
@@ -40,7 +40,7 @@
               >
                 {{ s }}
               </li>
-            </ul>
+            </ul> -->
           </div>
         </form>
 

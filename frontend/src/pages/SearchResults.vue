@@ -29,7 +29,7 @@
               <th>CVE ID</th>
               <th>Title</th>
               <th>State</th>
-              <th>Date</th>
+              <th>Date Published</th>
               <th>Details</th>
             </tr>
           </thead>
@@ -45,10 +45,10 @@
               </td>
               <td>{{ cve.title }}</td>
               <td><span class="badge bg-info">{{ cve.state }}</span></td>
-              <td>{{ cve.datePublished || cve.date }}</td>
+              <td>{{ cve.datePublished }}</td>
               <td>
                 <router-link
-                  :to="`/cve/${cve.cveId}`"
+                  :to="`/cve/${cve.cveMetadata?.cveId}`"
                   class="btn btn-sm btn-outline-primary"
                 >
                   <i class="bi bi-eye"></i> Details
