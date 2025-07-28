@@ -1,8 +1,80 @@
 <template>
   <div class="container mt-5">
+
     <h2 class="mb-4 fw-semibold d-flex align-items-center gap-2">
-      <i class="bi bi-list-check text-primary fs-3"></i> Results
+      <i class="bi bi-list-check text-primary fs-3"></i>Results
     </h2>
+
+    <!-- Global Search Bar -->
+    <div class="search-bar mb-4 p-3 bg-light rounded d-flex gap-2 align-items-center">
+      <input
+        v-model="searchTerm"
+        type="text"
+        class="form-control"
+        placeholder="Search CVEs..."
+      />
+      <button @click="performSearch" class="btn btn-primary">Search</button>    
+    </div>
+
+    
+    <!-- Filter Bar -->
+    <div class="filter-bar mb-4 p-3 bg-light rounded">
+      <div class="row g-3">
+
+        <!-- State Filter -->
+        <div class="col-md-3">
+          <label class="form-label">State</label>
+          <select v-model="selectedState" class="form-select">
+            <option value="all">All States</option>
+            <option value="PUBLISHED">Published</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+
+        <!-- Problem Type Filter -->
+        <div class="col-md-3">
+          <label class="form-label">Problem Type</label>
+          <select v-model="selectedProblemType" class="form-select">
+            <option value="all">All Types</option>
+            <option value="Buffer Overflow">Buffer Overflow</option>
+            <option value="XSS">XSS</option>
+            <option value="SQL Injection">SQL Injection</option>
+            <option value="Privilege Escalation">Privilege Escalation</option>
+          </select>
+        </div>
+
+        <!-- Start Date -->
+        <div class="col-md-2">
+          <label class="form-label">Start Date</label>
+          <input type="date" v-model="startDate" class="form-control" />
+        </div>
+
+        <!-- End Date -->
+        <div class="col-md-2">
+          <label class="form-label">End Date</label>
+          <input type="date" v-model="endDate" class="form-control" />
+        </div>
+
+        <!-- Sort Option -->
+        <div class="col-md-2">
+          <label class="form-label">Sort By</label>
+          <select v-model="sortBy" class="form-select">
+            <option value="default">Default</option>
+            <option value="date_desc">Newest</option>
+            <option value="date_asc">Oldest</option>
+            <option value="title_asc">A-Z Title</option>
+            <option value="title_desc">Z-A Title</option>
+          </select>
+        </div>
+
+        <!-- Apply -->
+        <div class="col-md-12 d-flex justify-content-end">
+          <button @click="applyFilters" class="btn btn-primary mt-3">Apply Filters</button>
+        </div>
+
+      </div>
+    </div>
+
 
     <div v-if="error" class="aleart alert-danger text-center">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
@@ -67,9 +139,16 @@ import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import axios from "axios";
 
+const searchTerm = ref("");
+const selectedState = ref("all");
+const selectedProblemType = ref("all");
+const startDate = ref("");
+const endDate = ref("");
+const sortBy = ref("default");
+
 const cves = ref([]);
+const isLoading = ref(false);
 const error = ref("");
-const isLoading = ref(true);
 
 const route = useRoute();
 
@@ -97,4 +176,62 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
-</script> 
+
+const performSearch = async () => {
+  isLoading.value = true;
+  error.value = "";
+
+  try {
+    const res = await axios.post("http://localhost:3000/api/cve/search", {
+      query: searchTerm.value,
+      mode: "simple"
+    });
+
+    cves.value = res.data.cves || [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Failed to fetch search results.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const applyFilters = async () => {
+  isLoading.value = true;
+  error.value = "";
+
+  try {
+    const res = await axios.post("http://localhost:3000/api/cve/search", {
+      query: searchTerm.value,
+      state: selectedState.value !== "all" ? selectedState.value : undefined,
+      problemType: selectedProblemType.value !== "all" ? selectedProblemType.value : undefined,
+      startDate: startDate.value || undefined,
+      endDate: endDate.value || undefined,
+      sort: sortBy.value !== "default" ? sortBy.value : undefined
+    });
+
+    cves.value = res.data.cves || [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Failed to fetch filtered results.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+</script>   
+
+<style scoped>
+.filter-bar {
+  background-color: #f1f1f1;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.search-bar {
+  background-color: #f1f1f1;
+  border-radius: 10px;
+}
+
+</style>
+

@@ -129,23 +129,23 @@ const searchCve = () => {
   router.push({ name: 'Results', query: { q: query.value.trim() } })
 }
 
-const fetchSuggestions = async () => {
-  if (!query.value.trim()) {
-    suggestions.value = []
-    return
-  }
-  try {
-    const res = await axios.get(`/api/cve/autocomplete?query=${encodeURIComponent(query.value.trim())}`)
-    suggestions.value = res.data
-  } catch (err) {
-    console.error(err)
-    suggestions.value = []
-  }
-}
+// const fetchSuggestions = async () => {
+//   if (!query.value.trim()) {
+//     suggestions.value = []
+//     return
+//   }
+//   try {
+//     const res = await axios.get(`/api/cve/autocomplete?query=${encodeURIComponent(query.value.trim())}`)
+//     suggestions.value = res.data
+//   } catch (err) {
+//     console.error(err)
+//     suggestions.value = []
+//   }
+// }
 
-const selectSuggestion = (s) => {
-  query.value = s
-  suggestions.value = []
-  searchCve()
-}
+// const selectSuggestion = (s) => {
+//   query.value = s
+//   suggestions.value = []
+//   searchCve()
+// }
 </script>
