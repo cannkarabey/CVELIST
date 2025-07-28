@@ -1,189 +1,3 @@
-// import client from './elasticClient.js';
-
-// const INDEX_NAME = 'cvelist';
-
-// const FULL_SOURCE_FIELDS = [
-//   'cveMetadata', 'title', 'version', 'datePublished', 'state',
-//   'affected', 'descriptions', 'problemTypes', 'providerMetadata',
-//   'references', 'cvssV3_1'
-// ];
-
-// function getSortClause(sortBy) {
-//   switch (sortBy) {
-//     case 'newest':
-//       return [{ datePublished: { order: 'desc' } }];
-//     case 'oldest':
-//       return [{ datePublished: { order: 'asc' } }];
-//     case 'a-z':
-//       return [{ 'title.keyword': { order: 'asc' } }];
-//     case 'z-a':
-//       return [{ 'title.keyword': { order: 'desc' } }];
-//     default:
-//       return [{ datePublished: { order: 'desc' } }];
-//   }
-// }
-
-// function buildFilterClause(state, problemType, dateFrom, dateTo) {
-//   const filters = [];
-
-//   if (state && state !== 'All States') {
-//     filters.push({ term: { state } });
-//   }
-
-//   if (problemType && problemType !== 'All Types') {
-//     filters.push({ term: { 'problemTypes.cweId.keyword': problemType } });
-//   }
-
-//   if (dateFrom || dateTo) {
-//     const range = {};
-//     if (dateFrom) range.gte = dateFrom;
-//     if (dateTo) range.lte = dateTo;
-//     filters.push({ range: { datePublished: range } });
-//   }
-
-//   return filters;
-// }
-
-// // Simple Search
-// export async function simpleSearch({ keyword, state, problemType, dateFrom, dateTo, sortBy, from, size }) {
-//   return await client.search({
-//     index: INDEX_NAME,
-//     _source: FULL_SOURCE_FIELDS,
-//     from,
-//     size,
-//     body: {
-//       query: {
-//         bool: {
-//           must: [
-//             { match: { title: { query: keyword, fuzziness: 'AUTO', operator: 'or' } } }
-//           ],
-//           filter: buildFilterClause(state, problemType, dateFrom, dateTo)
-//         }
-//       },
-//       sort: getSortClause(sortBy)
-//     }
-//   });
-// }
-
-// // Boosted Search
-// export async function boostedSearch({ keyword, state, problemType, dateFrom, dateTo, sortBy, from, size }) {
-//   return await client.search({
-//     index: INDEX_NAME,
-//     _source: FULL_SOURCE_FIELDS,
-//     from,
-//     size,
-//     body: {
-//       query: {
-//         bool: {
-//           must: [
-//             {
-//               multi_match: {
-//                 query: keyword,
-//                 fields: ['title^3', 'description^2', 'tags^1'],
-//                 type: 'best_fields'
-//               }
-//             }
-//           ],
-//           filter: buildFilterClause(state, problemType, dateFrom, dateTo)
-//         }
-//       },
-//       sort: getSortClause(sortBy)
-//     }
-//   });
-// }
-
-// // Fuzzy Search
-// export async function fuzzySearch({ keyword, state, problemType, dateFrom, dateTo, sortBy, from, size }) {
-//   return await client.search({
-//     index: INDEX_NAME,
-//     _source: FULL_SOURCE_FIELDS,
-//     from,
-//     size,
-//     body: {
-//       query: {
-//         bool: {
-//           must: [
-//             {
-//               match: {
-//                 title: {
-//                   query: keyword,
-//                   fuzziness: 'AUTO',
-//                   prefix_length: 1,
-//                   max_expansions: 50,
-//                   operator: 'and'
-//                 }
-//               }
-//             }
-//           ],
-//           filter: buildFilterClause(state, problemType, dateFrom, dateTo)
-//         }
-//       },
-//       sort: getSortClause(sortBy)
-//     }
-//   });
-// }
-
-// // Range Search
-// export async function rangeSearch({ field, gte, lte, from, size, sortBy }) {
-//   const lower = gte || '1999-01-01';
-//   const upper = lte || '2025-12-31';
-
-//   return await client.search({
-//     index: INDEX_NAME,
-//     _source: FULL_SOURCE_FIELDS,
-//     from,
-//     size,
-//     body: {
-//       query: {
-//         range: {
-//           [field]: { gte: lower, lte: upper }
-//         }
-//       },
-//       sort: getSortClause(sortBy)
-//     }
-//   });
-// }
-
-// // Bool Search
-// export async function boolSearch({ keyword, state, problemType, dateFrom, dateTo, sortBy, from, size }) {
-//   return await client.search({
-//     index: INDEX_NAME,
-//     _source: FULL_SOURCE_FIELDS,
-//     from,
-//     size,
-//     body: {
-//       query: {
-//         bool: {
-//           must: [
-//             { match: { title: keyword } }
-//           ],
-//           filter: buildFilterClause(state, problemType, dateFrom, dateTo)
-//         }
-//       },
-//       sort: getSortClause(sortBy)
-//     }
-//   });
-// }
-
-// // Profiled Search
-// export async function profiledSearch({ keyword, from, size, sortBy }) {
-//   return await client.search({
-//     index: INDEX_NAME,
-//     _source: FULL_SOURCE_FIELDS,
-//     from,
-//     size,
-//     body: {
-//       profile: true,
-//       query: {
-//         match: {
-//           title: keyword
-//         }
-//       },
-//       sort: getSortClause(sortBy)
-//     }
-//   });
-// }
-
 import client from './elasticClient.js';
 
 const INDEX_NAME = 'cvelist';
@@ -225,7 +39,6 @@ export async function simpleSearch(query) {
   });
 }
 
-
 export async function boostedSearch(query) {
   return await client.search({
     index: INDEX_NAME,
@@ -249,7 +62,6 @@ export async function boostedSearch(query) {
     }
   });
 }
-
 
 // Fuzzy search
 export async function fuzzySearch(query) {
@@ -276,7 +88,6 @@ export async function fuzzySearch(query) {
   });
 }
 
-
 // Range search
 export async function rangeSearch({ field, gte, lte }) {
   const lowerBound = gte || '1999-01-01';
@@ -302,9 +113,80 @@ export async function rangeSearch({ field, gte, lte }) {
   });
 }
 
-
 // Bool search
-export async function boolSearch({ keyword, state, dateFrom, dateTo }) {
+// export async function boolSearch({ keyword, state, dateFrom, dateTo }) {
+//   return await client.search({
+//     index: INDEX_NAME,
+//     _source: FULL_SOURCE_FIELDS,
+//     size: 10000,
+//     body: {
+//       query: {
+//         bool: {
+//           must: [
+//             { match: { title: keyword } }
+//           ],
+//           filter: [
+//             { term: { state } },
+//             { range: { datePublished: { gte: dateFrom, lte: dateTo } } }
+//           ]
+//         }
+//       },
+//       sort: [
+//         { "datePublished": { "order": "asc" } }
+//       ]
+//     }
+//   });
+// }
+
+export async function boolSearch({ keyword, filters = {}, sortBy = "date_desc" }) {
+  const mustQueries = [];
+  const filterQueries = [];
+
+  // 1. Anahtar kelime varsa title içinde ara
+  if (keyword && keyword.trim() !== "") {
+    mustQueries.push({
+      match: {
+        title: {
+          query: keyword,
+          fuzziness: "AUTO",
+          operator: "or"
+        }
+      }
+    });
+  }
+
+  // 2. State filtresi
+  if (filters.state && filters.state !== "all") {
+    filterQueries.push({ term: { state: filters.state } });
+  }
+
+  // 3. Problem type filtresi (descriptions.value içinde match yapılabilir)
+  if (filters.problemType && filters.problemType !== "all") {
+    mustQueries.push({
+      match: {
+        "problemTypes.descriptions.value": filters.problemType
+      }
+    });
+  }
+
+  // 4. Tarih aralığı
+  if (filters.startDate || filters.endDate) {
+    const dateRange = {};
+    if (filters.startDate) dateRange.gte = filters.startDate;
+    if (filters.endDate) dateRange.lte = filters.endDate;
+    filterQueries.push({
+      range: {
+        datePublished: dateRange
+      }
+    });
+  }
+
+  // 5. Sıralama
+  let sort = [{ datePublished: { order: "desc" } }];
+  if (sortBy === "date_asc") sort = [{ datePublished: { order: "asc" } }];
+  else if (sortBy === "title_asc") sort = [{ title: { order: "asc" } }];
+  else if (sortBy === "title_desc") sort = [{ title: { order: "desc" } }];
+
   return await client.search({
     index: INDEX_NAME,
     _source: FULL_SOURCE_FIELDS,
@@ -312,18 +194,11 @@ export async function boolSearch({ keyword, state, dateFrom, dateTo }) {
     body: {
       query: {
         bool: {
-          must: [
-            { match: { title: keyword } }
-          ],
-          filter: [
-            { term: { state } },
-            { range: { datePublished: { gte: dateFrom, lte: dateTo } } }
-          ]
+          must: mustQueries,
+          filter: filterQueries
         }
       },
-      sort: [
-        { "datePublished": { "order": "asc" } }
-      ]
+      sort
     }
   });
 }

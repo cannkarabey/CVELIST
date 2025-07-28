@@ -1,0 +1,264 @@
+<template>
+  <div class="container mt-5">
+
+    <h2 class="mb-4 fw-semibold d-flex align-items-center gap-2">
+      <i class="bi bi-list-check text-primary fs-3"></i>Results
+    </h2>
+
+    <!-- Global Search Bar -->
+    <div class="search-bar mb-4 p-3 bg-light rounded d-flex gap-2 align-items-center">
+      <input
+        v-model="searchTerm"
+        type="text"
+        class="form-control"
+        placeholder="Search CVEs..."
+      />
+      <button @click="performSearch" class="btn btn-primary">Search</button>    
+    </div>
+
+    
+    <!-- Filter Bar -->
+    <div class="filter-bar mb-4 p-3 bg-light rounded">
+      <div class="row g-3">
+
+        <!-- State Filter -->
+        <div class="col-md-3">
+          <label class="form-label">State</label>
+          <select v-model="selectedState" class="form-select">
+            <option value="all">All States</option>
+            <option value="PUBLISHED">Published</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+
+        <!-- Problem Type Filter -->
+        <div class="col-md-3">
+          <label class="form-label">Problem Type</label>
+          <select v-model="selectedProblemType" class="form-select">
+            <option value="all">All Types</option>
+            <option value="Buffer Overflow">Buffer Overflow</option>
+            <option value="XSS">XSS</option>
+            <option value="SQL Injection">SQL Injection</option>
+            <option value="Privilege Escalation">Privilege Escalation</option>
+          </select>
+        </div>
+
+        <!-- Start Date -->
+        <div class="col-md-2">
+          <label class="form-label">Start Date</label>
+          <input type="date" v-model="startDate" class="form-control" />
+        </div>
+
+        <!-- End Date -->
+        <div class="col-md-2">
+          <label class="form-label">End Date</label>
+          <input type="date" v-model="endDate" class="form-control" />
+        </div>
+
+        <!-- Sort Option -->
+        <div class="col-md-2">
+          <label class="form-label">Sort By</label>
+          <select v-model="sortBy" class="form-select">
+            <option value="default">Default</option>
+            <option value="date_desc">Newest</option>
+            <option value="date_asc">Oldest</option>
+            <option value="title_asc">A-Z Title</option>
+            <option value="title_desc">Z-A Title</option>
+          </select>
+        </div>
+
+        <!-- Apply -->
+        <div class="col-md-12 d-flex justify-content-end">
+          <button @click="applyFilters" class="btn btn-primary mt-3">Apply Filters</button>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div v-if="error" class="aleart alert-danger text-center">
+      <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div v-if="isLoading" class="d-flex flex-column align-items-center my-5">
+      <div class="spinner-border text-primary mb-2" role="status"></div>
+      <p class="text-muted">
+        <i class="bi bi-arrow-repeat"></i> Loading data...
+      </p>
+    </div>
+
+    <div v-else-if="cves.length === 0" class="text-center my-5">
+      <i class="bi bi-search fs-1 text-muted"></i>
+      <h4 class="text-muted mt-3">No results were found</h4>
+      <p class="text-muted">Try a different keyword or filter.</p>
+    </div>
+
+    <div v-if="cves.length > 0" class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>CVE ID</th>
+              <th>Title</th>
+              <th>State</th>
+              <th>Date Published</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="cve in cves" :key="cve.cveId">
+              <td>
+                <router-link
+                  :to="`/cve/${cve.cveId}`"
+                  class="text-decoration-none fw-medium text-primary"
+                >
+                  {{ cve.cveId }}
+                </router-link>
+              </td>
+              <td>{{ cve.title }}</td>
+              <td><span class="badge bg-info">{{ cve.state }}</span></td>
+              <td>{{ cve.datePublished }}</td>
+              <td>
+                <router-link
+                  :to="`/cve/${cve.cveId}`"
+                  class="btn btn-sm btn-outline-primary"
+                >
+                  <i class="bi bi-eye"></i> Details
+                </router-link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+</template>
+
+<script setup>
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import axios from "axios";
+
+const searchTerm = ref("");
+const selectedState = ref("all");
+const selectedProblemType = ref("all");
+const startDate = ref("");
+const endDate = ref("");
+const sortBy = ref("default");
+
+const cves = ref([]);
+const isLoading = ref(false);
+const error = ref("");
+
+const route = useRoute();
+
+onMounted(async () => {
+  isLoading.value = true;
+
+  const query = route.query.q; // /results?q=foo  
+  if (!query) {
+    error.value = "The query parameter is missing.";
+    isLoading.value = false;
+    return;
+  }
+
+  // const type = query.split(":")
+
+  try {
+    // ** //
+    const res = await axios.post("http://localhost:3000/api/cve/search", { query:query,mode:"simple" }); 
+    // ** //
+    cves.value = res.data.cves || [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Unable to connect to the server. Please try again.";
+  } finally {
+    isLoading.value = false;
+  }
+});
+
+const performSearch = async () => {
+  isLoading.value = true;
+  error.value = "";
+
+  try {
+    const res = await axios.post("http://localhost:3000/api/cve/search", {
+      query: searchTerm.value,
+      mode: "simple"
+    });
+
+    cves.value = res.data.cves || [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Failed to fetch search results.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// const applyFilters = async () => {
+//   isLoading.value = true;
+//   error.value = "";
+
+//   try {
+//     const res = await axios.post("http://localhost:3000/api/cve/search", {
+//       query: searchTerm.value,
+//       state: selectedState.value !== "all" ? selectedState.value : undefined,
+//       problemType: selectedProblemType.value !== "all" ? selectedProblemType.value : undefined,
+//       startDate: startDate.value || undefined,
+//       endDate: endDate.value || undefined,
+//       sort: sortBy.value !== "default" ? sortBy.value : undefined
+//     });
+
+//     cves.value = res.data.cves || [];
+//   } catch (err) {
+//     console.error(err);
+//     error.value = "Failed to fetch filtered results.";
+//   } finally {
+//     isLoading.value = false;
+//   }
+// };
+
+const applyFilters = async () => {
+  isLoading.value = true;
+  error.value = "";
+
+  try {
+    const res = await axios.post("http://localhost:3000/api/cve/search", {
+      query: searchTerm.value,
+      filters: {
+        state: selectedState.value !== "all" ? selectedState.value : undefined,
+        problemType: selectedProblemType.value !== "all" ? selectedProblemType.value : undefined,
+        startDate: startDate.value || undefined,
+        endDate: endDate.value || undefined
+      },
+      sortBy: sortBy.value !== "default" ? sortBy.value : undefined
+    });
+
+    cves.value = res.data.cves || [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Failed to fetch filtered results.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+
+</script>   
+
+<style scoped>
+.filter-bar {
+  background-color: #f1f1f1;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.search-bar {
+  background-color: #f1f1f1;
+  border-radius: 10px;
+}
+
+</style>
+

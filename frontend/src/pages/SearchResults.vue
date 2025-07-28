@@ -13,15 +13,12 @@
         class="form-control"
         placeholder="Search CVEs..."
       />
-      <button @click="performSearch" class="btn btn-primary">Search</button>    
+      <button @click="performSearch" class="btn btn-primary">Search</button>
     </div>
 
-    
     <!-- Filter Bar -->
     <div class="filter-bar mb-4 p-3 bg-light rounded">
       <div class="row g-3">
-
-        <!-- State Filter -->
         <div class="col-md-3">
           <label class="form-label">State</label>
           <select v-model="selectedState" class="form-select">
@@ -31,7 +28,6 @@
           </select>
         </div>
 
-        <!-- Problem Type Filter -->
         <div class="col-md-3">
           <label class="form-label">Problem Type</label>
           <select v-model="selectedProblemType" class="form-select">
@@ -43,19 +39,16 @@
           </select>
         </div>
 
-        <!-- Start Date -->
         <div class="col-md-2">
           <label class="form-label">Start Date</label>
           <input type="date" v-model="startDate" class="form-control" />
         </div>
 
-        <!-- End Date -->
         <div class="col-md-2">
           <label class="form-label">End Date</label>
           <input type="date" v-model="endDate" class="form-control" />
         </div>
 
-        <!-- Sort Option -->
         <div class="col-md-2">
           <label class="form-label">Sort By</label>
           <select v-model="sortBy" class="form-select">
@@ -67,16 +60,13 @@
           </select>
         </div>
 
-        <!-- Apply -->
         <div class="col-md-12 d-flex justify-content-end">
           <button @click="applyFilters" class="btn btn-primary mt-3">Apply Filters</button>
         </div>
-
       </div>
     </div>
 
-
-    <div v-if="error" class="aleart alert-danger text-center">
+    <div v-if="error" class="alert alert-danger text-center">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
     </div>
 
@@ -130,7 +120,33 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination -->
+    <div class="d-flex justify-content-center my-4" v-if="totalPages > 1">
+      <nav>
+        <ul class="pagination">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="changePage(currentPage - 1)">Previous</button>
+          </li>
+
+          <li
+            v-for="page in totalPages"
+            :key="page"
+            class="page-item"
+            :class="{ active: page === currentPage }"
+          >
+            <button class="page-link" @click="changePage(page)">{{ page }}</button>
+          </li>
+
+          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <button class="page-link" @click="changePage(currentPage + 1)">Next</button>
+          </li>
+        </ul>
+      </nav>
     </div>
+    </div>
+
+    
   </div>
 </template>
 
@@ -150,30 +166,18 @@ const cves = ref([]);
 const isLoading = ref(false);
 const error = ref("");
 
+const currentPage = ref(1);
+const pageSize = 20;
+const totalResults = ref(0);
+const totalPages = ref(1);
+
 const route = useRoute();
 
 onMounted(async () => {
-  isLoading.value = true;
-
-  const query = route.query.q; // /results?q=foo  
-  if (!query) {
-    error.value = "The query parameter is missing.";
-    isLoading.value = false;
-    return;
-  }
-
-  // const type = query.split(":")
-
-  try {
-    // ** //
-    const res = await axios.post("http://localhost:3000/api/cve/search", { query:query,mode:"simple" }); 
-    // ** //
-    cves.value = res.data.cves || [];
-  } catch (err) {
-    console.error(err);
-    error.value = "Unable to connect to the server. Please try again.";
-  } finally {
-    isLoading.value = false;
+  const query = route.query.q;
+  if (query) {
+    searchTerm.value = query;
+    await performSearch();
   }
 });
 
@@ -184,10 +188,14 @@ const performSearch = async () => {
   try {
     const res = await axios.post("http://localhost:3000/api/cve/search", {
       query: searchTerm.value,
+      from: (currentPage.value - 1) * pageSize,
+      size: pageSize,
       mode: "simple"
     });
 
     cves.value = res.data.cves || [];
+    totalResults.value = res.data.total || 0;
+    totalPages.value = Math.ceil(totalResults.value / pageSize);
   } catch (err) {
     console.error(err);
     error.value = "Failed to fetch search results.";
@@ -197,20 +205,31 @@ const performSearch = async () => {
 };
 
 const applyFilters = async () => {
+  currentPage.value = 1;
+  await performSearchWithFilters();
+};
+
+const performSearchWithFilters = async () => {
   isLoading.value = true;
   error.value = "";
 
   try {
     const res = await axios.post("http://localhost:3000/api/cve/search", {
       query: searchTerm.value,
-      state: selectedState.value !== "all" ? selectedState.value : undefined,
-      problemType: selectedProblemType.value !== "all" ? selectedProblemType.value : undefined,
-      startDate: startDate.value || undefined,
-      endDate: endDate.value || undefined,
-      sort: sortBy.value !== "default" ? sortBy.value : undefined
+      filters: {
+        state: selectedState.value !== "all" ? selectedState.value : undefined,
+        problemType: selectedProblemType.value !== "all" ? selectedProblemType.value : undefined,
+        startDate: startDate.value || undefined,
+        endDate: endDate.value || undefined
+      },
+      sortBy: sortBy.value !== "default" ? sortBy.value : undefined,
+      from: (currentPage.value - 1) * pageSize,
+      size: pageSize
     });
 
     cves.value = res.data.cves || [];
+    totalResults.value = res.data.total || 0;
+    totalPages.value = Math.ceil(totalResults.value / pageSize);
   } catch (err) {
     console.error(err);
     error.value = "Failed to fetch filtered results.";
@@ -219,7 +238,12 @@ const applyFilters = async () => {
   }
 };
 
-</script>   
+const changePage = async (page) => {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+  await performSearchWithFilters();
+};
+</script>
 
 <style scoped>
 .filter-bar {
@@ -232,6 +256,4 @@ const applyFilters = async () => {
   background-color: #f1f1f1;
   border-radius: 10px;
 }
-
 </style>
-
