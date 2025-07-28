@@ -166,7 +166,7 @@ onMounted(async () => {
 
   try {
     // ** //
-    const res = await axios.post("http://localhost:3000/api/cve/search", { query:query,mode:"boosted" }); 
+    const res = await axios.post("http://localhost:3000/api/cve/search", { query:query,mode:"simple" }); 
     // ** //
     cves.value = res.data.cves || [];
   } catch (err) {
