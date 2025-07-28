@@ -4,7 +4,7 @@
       <i class="bi bi-list-check text-primary fs-3"></i> Results
     </h2>
 
-    <div v-if="error" class="alert alert-danger text-center">
+    <div v-if="error" class="aleart alert-danger text-center">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
     </div>
 
@@ -48,7 +48,7 @@
               <td>{{ cve.datePublished }}</td>
               <td>
                 <router-link
-                  :to="`/cve/${cve.cveMetadata?.cveId}`"
+                  :to="`/cve/${cve.cveId}`"
                   class="btn btn-sm btn-outline-primary"
                 >
                   <i class="bi bi-eye"></i> Details
@@ -83,9 +83,11 @@ onMounted(async () => {
     return;
   }
 
+  // const type = query.split(":")
+
   try {
     // ** //
-    const res = await axios.post("http://localhost:3000/api/cve/search", { query });
+    const res = await axios.post("http://localhost:3000/api/cve/search", { query:query,mode:"boosted" }); 
     // ** //
     cves.value = res.data.cves || [];
   } catch (err) {
@@ -96,4 +98,3 @@ onMounted(async () => {
   }
 });
 </script> 
-

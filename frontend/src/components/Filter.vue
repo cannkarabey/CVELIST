@@ -1,7 +1,7 @@
 <template>
   <div class="container mt-4">
-    <h1 class="mb-3">Dashboard</h1>
-    <p class="text-muted">Welcome to the CVE Search Dashboard.</p>
+    <h1 class="mb-3">Filter</h1>
+    <p class="text-muted">Welcome to the CVE Search Filter.</p>
 
     <!-- Search Bar -->
     <div class="input-group mb-3">
@@ -90,4 +90,4 @@ export default {
     },
   },
 };
-</script>
+</script> 
