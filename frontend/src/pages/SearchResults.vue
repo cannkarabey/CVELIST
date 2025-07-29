@@ -18,7 +18,9 @@
 
     <!-- Filter Bar -->
     <div class="filter-bar mb-4 p-3 bg-light rounded">
+      
       <div class="row g-3">
+        
         <div class="col-md-3">
           <label class="form-label">State</label>
           <select v-model="selectedState" class="form-select">
@@ -27,8 +29,9 @@
             <option value="REJECTED">Rejected</option>
           </select>
         </div>
+        
 
-        <div class="col-md-3">
+        <!-- <div class="col-md-3">
           <label class="form-label">Problem Type</label>
           <select v-model="selectedProblemType" class="form-select">
             <option value="all">All Types</option>
@@ -37,19 +40,19 @@
             <option value="SQL Injection">SQL Injection</option>
             <option value="Privilege Escalation">Privilege Escalation</option>
           </select>
-        </div>
+        </div> -->
 
-        <div class="col-md-2">
+        <div class="col-md-3">
           <label class="form-label">Start Date</label>
           <input type="date" v-model="startDate" class="form-control" />
         </div>
 
-        <div class="col-md-2">
+        <div class="col-md-3">
           <label class="form-label">End Date</label>
           <input type="date" v-model="endDate" class="form-control" />
         </div>
 
-        <div class="col-md-2">
+        <div class="col-md-3">
           <label class="form-label">Sort By</label>
           <select v-model="sortBy" class="form-select">
             <option value="default">Default</option>
@@ -57,14 +60,20 @@
             <option value="date_asc">Oldest</option>
             <option value="title_asc">A-Z Title</option>
             <option value="title_desc">Z-A Title</option>
-          </select>
-        </div>
-
+          </select> 
+        </div>    
         <div class="col-md-12 d-flex justify-content-end">
           <button @click="applyFilters" class="btn btn-primary mt-3">Apply Filters</button>
         </div>
       </div>
     </div>
+    
+    <div v-if="!isLoading && cves.length > 0" class="mb-3">
+      <p class="count text-muted">
+        <strong>{{ totalResults }}</strong> kayıt bulundu.
+      </p>
+    </div>
+
 
     <div v-if="error" class="alert alert-danger text-center">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
@@ -126,27 +135,32 @@
       <nav>
         <ul class="pagination">
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="changePage(currentPage - 1)">Previous</button>
+            <button class="page-link" @click="goToFirstPage">«</button>
+          </li>
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="prevPage">‹</button>
           </li>
 
           <li
-            v-for="page in totalPages"
+            v-for="page in visiblePages"
             :key="page"
             class="page-item"
             :class="{ active: page === currentPage }"
           >
-            <button class="page-link" @click="changePage(page)">{{ page }}</button>
+            <button class="page-link" @click="goToPage(page)">{{ page }}</button>
           </li>
 
           <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-            <button class="page-link" @click="changePage(currentPage + 1)">Next</button>
+            <button class="page-link" @click="nextPage">›</button>
+          </li>
+          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <button class="page-link" @click="goToLastPage">»</button>
           </li>
         </ul>
       </nav>
     </div>
-    </div>
 
-    
+  </div>
   </div>
 </template>
 
@@ -154,6 +168,8 @@
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import axios from "axios";
+import { computed } from 'vue';
+
 
 const searchTerm = ref("");
 const selectedState = ref("all");
@@ -243,17 +259,67 @@ const changePage = async (page) => {
   currentPage.value = page;
   await performSearchWithFilters();
 };
+
+const visiblePages = computed(() => {
+  const maxPagesToShow = 10;
+  const half = Math.floor(maxPagesToShow / 2);
+  let start = Math.max(1, currentPage.value - half);
+  let end = Math.min(totalPages.value, start + maxPagesToShow - 1);
+
+  if (end - start < maxPagesToShow - 1) {
+    start = Math.max(1, end - maxPagesToShow + 1);
+  }
+
+  const pages = [];
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+  return pages;
+});
+
+const goToPage = async (page) => {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+  await performSearchWithFilters();
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    goToPage(currentPage.value + 1);
+  }
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    goToPage(currentPage.value - 1);
+  }
+};
+
+const goToFirstPage = () => {
+  goToPage(1);
+};
+
+const goToLastPage = () => {
+  goToPage(totalPages.value);
+};
+
 </script>
 
 <style scoped>
+.search-bar {
+  background-color: #f1f1f1;
+  border-radius: 10px;
+}
+
 .filter-bar {
   background-color: #f1f1f1;
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
-.search-bar {
+.text-muted {
   background-color: #f1f1f1;
+  padding: 1rem;
   border-radius: 10px;
 }
 </style>

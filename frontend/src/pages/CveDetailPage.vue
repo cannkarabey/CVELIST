@@ -1,5 +1,5 @@
 <template>
-  <div class="container mt-5">
+  <div class="detailpage container mt-5">
     <h2 class="mb-4 fw-semibold">
       CVE Detail: {{ cve?.cveId || 'N/A' }}
     </h2>
@@ -83,3 +83,10 @@ onMounted(async () => {
 });
 </script>
 
+<style scoped>
+.detailpage {
+  background-color: #f1f1f1;
+  padding: 1rem;
+  border-radius: 10px;
+}
+</style>
