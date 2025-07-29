@@ -1,4 +1,5 @@
 import client from '../elastic/elasticClient.js';
+import { normalizeCve } from '../utils/normalizeCve.js';
 
 import {
   simpleSearch,
@@ -10,9 +11,6 @@ import {
 } from '../elastic/searchService.js';
 
 const INDEX_NAME = 'cvelist';
-
-// normalizeli hali
-import { normalizeCve } from '../utils/normalizeCve.js';
 
 export async function getCveById(req, res) {
   const { cveId } = req.params;
@@ -41,21 +39,36 @@ export async function getCveById(req, res) {
 }
 
 // export async function searchCves(req, res) {
-//   const { query, state, dateFrom, dateTo, field, gte, lte, mode, page = 1, size = 20 } = req.body;
+//   const {
+//     query,
+//     state,
+//     dateFrom,
+//     dateTo,
+//     field,
+//     gte,
+//     lte,
+//     mode = 'simple',
+//     page = 1,
+//     size = 20,
+//     filters,
+//     sortBy
+//   } = req.body;
+
 //   const from = (page - 1) * size;
 
 //   try {
 //     let result;
 
+//     // mode geçersizse default: boosted
 //     switch (mode) {
 //       case 'simple':
-//         result = await simpleSearch(query, from, size);
+//         result = await simpleSearch(query, from, size, filters, sortBy);
 //         break;
 //       case 'boosted':
-//         result = await boostedSearch(query, from, size);
+//         result = await boostedSearch(query, from, size, filters, sortBy);
 //         break;
 //       case 'fuzzy':
-//         result = await fuzzySearch(query, from, size);
+//         result = await fuzzySearch(query, from, size, filters, sortBy);
 //         break;
 //       case 'range':
 //         if (!field || !gte || !lte) {
@@ -67,10 +80,10 @@ export async function getCveById(req, res) {
 //         result = await boolSearch({ keyword: query, state, dateFrom, dateTo }, from, size);
 //         break;
 //       case 'profiled':
-//         result = await profiledSearch(query, from, size);
+//         result = await profiledSearch(query, from, size, filters, sortBy);
 //         break;
 //       default:
-//         result = await boostedSearch(query, from, size);
+//         result = await boostedSearch(query, from, size, filters, sortBy);
 //     }
 
 //     const totalHits = result.hits.total?.value || 0;
@@ -86,61 +99,37 @@ export async function getCveById(req, res) {
 //       };
 //     });
 
-//     res.json({ cves, totalPages, currentPage: Number(page) });
+//     res.json({
+//       cves,
+//       totalPages,
+//       currentPage: Number(page)
+//     });
 
 //   } catch (err) {
-//     console.error(err);
+//     console.error('Error in searchCves:', err);
 //     res.status(500).json({ error: 'Internal server error' });
 //   }
 // }
 
 export async function searchCves(req, res) {
   const {
-    query,
-    state,
-    dateFrom,
-    dateTo,
-    field,
-    gte,
-    lte,
-    mode = 'simple',
+    query = "",
+    filters = {},
+    sortBy = "date_desc",
     page = 1,
-    size = 20,
-    filters,
-    sortBy
+    size = 20
   } = req.body;
 
   const from = (page - 1) * size;
 
   try {
-    let result;
-
-    // mode geçersizse default: boosted
-    switch (mode) {
-      case 'simple':
-        result = await simpleSearch(query, from, size, filters, sortBy);
-        break;
-      case 'boosted':
-        result = await boostedSearch(query, from, size, filters, sortBy);
-        break;
-      case 'fuzzy':
-        result = await fuzzySearch(query, from, size, filters, sortBy);
-        break;
-      case 'range':
-        if (!field || !gte || !lte) {
-          return res.status(400).json({ error: 'Range search requires field, gte, lte' });
-        }
-        result = await rangeSearch({ field, gte, lte }, from, size);
-        break;
-      case 'bool':
-        result = await boolSearch({ keyword: query, state, dateFrom, dateTo }, from, size);
-        break;
-      case 'profiled':
-        result = await profiledSearch(query, from, size, filters, sortBy);
-        break;
-      default:
-        result = await boostedSearch(query, from, size, filters, sortBy);
-    }
+    const result = await boolSearch({
+      keyword: query,
+      filters,
+      sortBy,
+      from,
+      size
+    });
 
     const totalHits = result.hits.total?.value || 0;
     const totalPages = Math.ceil(totalHits / size);
@@ -157,6 +146,7 @@ export async function searchCves(req, res) {
 
     res.json({
       cves,
+      total: totalHits,
       totalPages,
       currentPage: Number(page)
     });
@@ -166,7 +156,6 @@ export async function searchCves(req, res) {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
-
 
 // GET /api/cve → (isteğe bağlı) tüm CVE kayıtlarını getirir (sınırlı sayıda)
 export async function getAllCves(req, res) {

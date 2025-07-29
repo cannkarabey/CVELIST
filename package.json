@@ -15,6 +15,8 @@
     "@elastic/elasticsearch": "^9.0.3",
     "cors": "^2.8.5",
     "ejs": "^3.1.10",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.3.6"
   }
 }

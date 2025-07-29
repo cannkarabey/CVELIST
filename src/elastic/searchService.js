@@ -113,8 +113,55 @@ export async function rangeSearch({ field, gte, lte }) {
   });
 }
 
-// Bool search
-// export async function boolSearch({ keyword, state, dateFrom, dateTo }) {
+// export async function boolSearch({ keyword, filters = {}, sortBy = "date_desc" }) {
+//   const mustQueries = [];
+//   const filterQueries = [];
+
+//   // 1. Anahtar kelime varsa title içinde ara
+//   if (keyword && keyword.trim() !== "") {
+//     mustQueries.push({
+//       match: {
+//         title: {
+//           query: keyword,
+//           fuzziness: "AUTO",
+//           operator: "or"
+//         }
+//       }
+//     });
+//   }
+
+//   // 2. State filtresi
+//   if (filters.state && filters.state !== "all") {
+//     filterQueries.push({ term: { state: filters.state } });
+//   }
+
+//   // 3. Problem type filtresi (descriptions.value içinde match yapılabilir)
+//   if (filters.problemType && filters.problemType !== "all") {
+//     mustQueries.push({
+//       match: {
+//         "problemTypes.descriptions.value": filters.problemType
+//       }
+//     });
+//   }
+
+//   // 4. Tarih aralığı
+//   if (filters.startDate || filters.endDate) {
+//     const dateRange = {};
+//     if (filters.startDate) dateRange.gte = filters.startDate;
+//     if (filters.endDate) dateRange.lte = filters.endDate;
+//     filterQueries.push({
+//       range: {
+//         datePublished: dateRange
+//       }
+//     });
+//   }
+
+//   // 5. Sıralama
+//   let sort = [{ datePublished: { order: "desc" } }];
+//   if (sortBy === "date_asc") sort = [{ datePublished: { order: "asc" } }];
+//   else if (sortBy === "title_asc") sort = [{ title: { order: "asc" } }];
+//   else if (sortBy === "title_desc") sort = [{ title: { order: "desc" } }];
+
 //   return await client.search({
 //     index: INDEX_NAME,
 //     _source: FULL_SOURCE_FIELDS,
@@ -122,27 +169,20 @@ export async function rangeSearch({ field, gte, lte }) {
 //     body: {
 //       query: {
 //         bool: {
-//           must: [
-//             { match: { title: keyword } }
-//           ],
-//           filter: [
-//             { term: { state } },
-//             { range: { datePublished: { gte: dateFrom, lte: dateTo } } }
-//           ]
+//           must: mustQueries,
+//           filter: filterQueries
 //         }
 //       },
-//       sort: [
-//         { "datePublished": { "order": "asc" } }
-//       ]
+//       sort
 //     }
 //   });
 // }
 
-export async function boolSearch({ keyword, filters = {}, sortBy = "date_desc" }) {
+export async function boolSearch({ keyword, filters = {}, sortBy = "date_desc", from = 0, size = 20 }) {
   const mustQueries = [];
   const filterQueries = [];
 
-  // 1. Anahtar kelime varsa title içinde ara
+  // Anahtar kelime
   if (keyword && keyword.trim() !== "") {
     mustQueries.push({
       match: {
@@ -155,13 +195,13 @@ export async function boolSearch({ keyword, filters = {}, sortBy = "date_desc" }
     });
   }
 
-  // 2. State filtresi
-  if (filters.state && filters.state !== "all") {
+  // Filtre: state
+  if (filters.state) {
     filterQueries.push({ term: { state: filters.state } });
   }
 
-  // 3. Problem type filtresi (descriptions.value içinde match yapılabilir)
-  if (filters.problemType && filters.problemType !== "all") {
+  // Filtre: problem type
+  if (filters.problemType) {
     mustQueries.push({
       match: {
         "problemTypes.descriptions.value": filters.problemType
@@ -169,7 +209,7 @@ export async function boolSearch({ keyword, filters = {}, sortBy = "date_desc" }
     });
   }
 
-  // 4. Tarih aralığı
+  // Filtre: tarih aralığı
   if (filters.startDate || filters.endDate) {
     const dateRange = {};
     if (filters.startDate) dateRange.gte = filters.startDate;
@@ -181,16 +221,17 @@ export async function boolSearch({ keyword, filters = {}, sortBy = "date_desc" }
     });
   }
 
-  // 5. Sıralama
+  // Sıralama
   let sort = [{ datePublished: { order: "desc" } }];
   if (sortBy === "date_asc") sort = [{ datePublished: { order: "asc" } }];
-  else if (sortBy === "title_asc") sort = [{ title: { order: "asc" } }];
-  else if (sortBy === "title_desc") sort = [{ title: { order: "desc" } }];
+  else if (sortBy === "title_asc") sort = [{ "title.keyword": { order: "asc" } }];
+  else if (sortBy === "title_desc") sort = [{ "title.keyword": { order: "desc" } }];
 
   return await client.search({
     index: INDEX_NAME,
     _source: FULL_SOURCE_FIELDS,
-    size: 10000,
+    from,
+    size,
     body: {
       query: {
         bool: {

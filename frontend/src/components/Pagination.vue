@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="pagination-container" v-if="totalPages > 1">
     <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">
       &laquo;
@@ -96,4 +96,4 @@ button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-</style>
+</style> -->
