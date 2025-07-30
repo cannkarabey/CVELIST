@@ -58,8 +58,8 @@
             <option value="default">Default</option>
             <option value="date_desc">Newest</option>
             <option value="date_asc">Oldest</option>
-            <option value="title_asc">A-Z Title</option>
-            <option value="title_desc">Z-A Title</option>
+            <!-- <option value="title_asc">A-Z Title</option>
+            <option value="title_desc">Z-A Title</option> -->
           </select> 
         </div>    
         <div class="col-md-12 d-flex justify-content-end">
@@ -187,6 +187,8 @@ const pageSize = 20;
 const totalResults = ref(0);
 const totalPages = ref(1);
 
+const searchMode = ref("simple"); // **
+
 const route = useRoute();
 
 onMounted(async () => {
@@ -198,6 +200,7 @@ onMounted(async () => {
 });
 
 const performSearch = async () => {
+  searchMode.value = "simple";  // **
   isLoading.value = true;
   error.value = "";
 
@@ -226,6 +229,7 @@ const applyFilters = async () => {
 };
 
 const performSearchWithFilters = async () => {
+  searchMode.value = "filtered"; // **
   isLoading.value = true;
   error.value = "";
 
@@ -254,12 +258,6 @@ const performSearchWithFilters = async () => {
   }
 };
 
-const changePage = async (page) => {
-  if (page < 1 || page > totalPages.value) return;
-  currentPage.value = page;
-  await performSearchWithFilters();
-};
-
 const visiblePages = computed(() => {
   const maxPagesToShow = 10;
   const half = Math.floor(maxPagesToShow / 2);
@@ -277,10 +275,21 @@ const visiblePages = computed(() => {
   return pages;
 });
 
+// const goToPage = async (page) => {
+//   if (page < 1 || page > totalPages.value) return;
+//   currentPage.value = page;
+//   await performSearchWithFilters();
+// };
+
 const goToPage = async (page) => {
   if (page < 1 || page > totalPages.value) return;
   currentPage.value = page;
-  await performSearchWithFilters();
+
+  if (searchMode.value === "filtered") {
+    await performSearchWithFilters();
+  } else {
+    await performSearch();
+  }
 };
 
 const nextPage = () => {

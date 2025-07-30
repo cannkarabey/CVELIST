@@ -116,11 +116,9 @@ export async function searchCves(req, res) {
     query = "",
     filters = {},
     sortBy = "date_desc",
-    page = 1,
+    from = 0,               // ✅ doğrudan body’den al
     size = 20
   } = req.body;
-
-  const from = (page - 1) * size;
 
   try {
     const result = await boolSearch({
@@ -148,7 +146,7 @@ export async function searchCves(req, res) {
       cves,
       total: totalHits,
       totalPages,
-      currentPage: Number(page)
+      currentPage: Math.floor(from / size) + 1   // ✅ doğru sayfa hesaplaması
     });
 
   } catch (err) {
@@ -156,6 +154,7 @@ export async function searchCves(req, res) {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
 
 // GET /api/cve → (isteğe bağlı) tüm CVE kayıtlarını getirir (sınırlı sayıda)
 export async function getAllCves(req, res) {
