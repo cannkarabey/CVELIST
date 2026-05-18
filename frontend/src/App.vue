@@ -1,6 +1,6 @@
 <template>
   <div class="app-wrapper">
-    <Navbar :darkMode="darkMode" :toggleDarkMode="toggleDarkMode" />
+    <Navbar />
     <main class="content">
       <router-view />
     </main>
@@ -11,21 +11,6 @@
 <script setup>
 import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
-import { ref, watch } from 'vue'
-
-const darkMode = ref(false)
-
-watch(darkMode, (val) => {
-  if (val) {
-    document.body.classList.add('bg-dark', 'text-light')
-  } else {
-    document.body.classList.remove('bg-dark', 'text-light')
-  }
-})
-
-const toggleDarkMode = () => {
-  darkMode.value = !darkMode.value
-}
 </script>
 
 <style>

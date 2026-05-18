@@ -1,94 +1,79 @@
 <template>
-  <div class="container mt-5">
-    <h1 class="text-center text-primary mb-4">
-      <i class="bi bi-shield-lock"></i> CVE Search
-    </h1>
+  <div class="hero">
+    <div class="hero-content">
 
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <form @submit.prevent="searchCve">
-          <div class="input-group mb-3 position-relative">
-            <!-- Büyüteç -->
-            <span class="input-group-text">
-              <i class="bi bi-search"></i>
-            </span>
+      <div class="logo-block">
+        <i class="bi bi-shield-lock-fill logo-icon"></i>
+        <h1 class="logo-text">CVE<span>Search</span></h1>
+      </div>
 
-            <!-- Arama input -->
-            <input
-              type="text"
-              v-model="query"
-              @input="fetchSuggestions"
-              class="form-control"
-              placeholder="CVE ID or keyword"
-            />
+      <p class="tagline">Search vulnerabilities across the CVE database</p>
 
-            <!-- Search butonu -->
-            <button type="submit" class="btn btn-primary">Search</button>
-
-            <!-- Öneriler -->
-            <!-- <ul
-              v-if="suggestions.length"
-              class="list-group position-absolute w-100"
-              style="z-index: 10; top: 100%;"
-            >
-              <li
-                v-for="s in suggestions"
-                :key="s"
-                @click="selectSuggestion(s)"
-                class="list-group-item list-group-item-action"
-                style="cursor: pointer;"
-              >
-                {{ s }}
-              </li>
-            </ul> -->
+      <form @submit.prevent="searchCve" class="search-form">
+        <div class="search-bar" :class="{ focused: isFocused }">
+          <i class="bi bi-search bar-icon"></i>
+          <input
+            type="text"
+            v-model="query"
+            @focus="isFocused = true"
+            @blur="isFocused = false"
+            placeholder="Search CVE ID or keyword..."
+            class="bar-input"
+            autocomplete="off"
+          />
+          <div class="bar-actions">
+            <button type="button" class="bar-btn" title="AI Search">
+              <i class="bi bi-stars"></i>
+            </button>
+            <button type="button" class="bar-btn" title="Voice Search">
+              <i class="bi bi-mic"></i>
+            </button>
           </div>
-        </form>
-
-        <div v-if="error" class="alert alert-danger">
-          {{ error }}
+          <button type="submit" class="search-submit">Search</button>
         </div>
+        <p v-if="error" class="error-msg">
+          <i class="bi bi-exclamation-circle"></i> {{ error }}
+        </p>
+      </form>
 
-        <div v-if="recentSearches.length" class="mt-4 text-center">
-          <h5>Recent  Searches</h5>
-          <ul class="list-inline">
-            <li
-              v-for="q in recentSearches"
-              :key="q"
-              class="list-inline-item"
-            >
-              <button @click="query = q; searchCve()" class="btn btn-sm btn-outline-secondary">{{ q }}</button>
-            </li>
-          </ul>
-        </div>
+      <div v-if="popularSearches.length" class="chips-row">
+        <span class="chips-label">Popular:</span>
+        <button
+          v-for="q in popularSearches"
+          :key="q"
+          type="button"
+          @click="query = q; searchCve()"
+          class="chip"
+        >{{ q }}</button>
+      </div>
 
-        <div v-if="popularSearches.length" class="mt-4 text-center">
-          <h5>Popular Searches</h5>
-          <ul class="list-inline">
-            <li
-              v-for="q in popularSearches"
-              :key="q"
-              class="list-inline-item"
-            >
-              <button @click="query = q; searchCve()" class="btn btn-sm btn-outline-primary">{{ q }}</button>
-            </li>
-          </ul>
-        </div>
+      <div v-if="recentSearches.length" class="chips-row">
+        <span class="chips-label">Recent:</span>
+        <button
+          v-for="q in recentSearches"
+          :key="q"
+          type="button"
+          @click="query = q; searchCve()"
+          class="chip chip-recent"
+        >
+          <i class="bi bi-clock-history"></i> {{ q }}
+        </button>
+      </div>
 
-        <!-- <div v-if="recentSearches.length" class="mt-4 text-center">
-          <h5>Recent Searches</h5>
-          <ul class="list-inline">
-            <li
-              v-for="q in recentSearches"
-              :key="q"
-              class="list-inline-item"
-            >
-              <button @click="query = q; searchCve()" class="btn btn-sm btn-outline-secondary">{{ q }}</button>
-            </li>
-          </ul>
-        </div>
-        <div v-else class="text-center text-muted mt-3">
-          <h6>There has been no search yet.</h6>
-        </div> -->
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-card">
+        <i class="bi bi-database-fill"></i>
+        <span>Elasticsearch Powered</span>
+      </div>
+      <div class="stat-card">
+        <i class="bi bi-shield-check"></i>
+        <span>Full CVE Database</span>
+      </div>
+      <div class="stat-card">
+        <i class="bi bi-lightning-charge-fill"></i>
+        <span>Real-time Search</span>
       </div>
     </div>
   </div>
@@ -97,11 +82,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 
 const query = ref('')
 const error = ref('')
-const suggestions = ref([])
+const isFocused = ref(false)
 const recentSearches = ref([])
 const popularSearches = ref([
   'Facebook',
@@ -115,37 +99,234 @@ const router = useRouter()
 
 const searchCve = () => {
   if (!query.value.trim()) {
-    error.value = 'The search term is required.'
+    error.value = 'Please enter a search term.'
     return
   }
   error.value = ''
-  if (!recentSearches.value.includes(query.value.trim())) {
-    recentSearches.value.unshift(query.value.trim())
-    if (recentSearches.value.length > 5) {
-      recentSearches.value.pop()
-    }
+  const q = query.value.trim()
+  if (!recentSearches.value.includes(q)) {
+    recentSearches.value.unshift(q)
+    if (recentSearches.value.length > 5) recentSearches.value.pop()
   }
-  suggestions.value = []
-  router.push({ name: 'Results', query: { q: query.value.trim() } })
+  router.push({ name: 'Results', query: { q } })
+}
+</script>
+
+<style scoped>
+.hero {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem 2rem;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -5%, rgba(249, 115, 22, 0.07) 0%, transparent 65%),
+    var(--bg);
+  gap: 2.5rem;
 }
 
-// const fetchSuggestions = async () => {
-//   if (!query.value.trim()) {
-//     suggestions.value = []
-//     return
-//   }
-//   try {
-//     const res = await axios.get(`/api/cve/autocomplete?query=${encodeURIComponent(query.value.trim())}`)
-//     suggestions.value = res.data
-//   } catch (err) {
-//     console.error(err)
-//     suggestions.value = []
-//   }
-// }
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 680px;
+}
 
-// const selectSuggestion = (s) => {
-//   query.value = s
-//   suggestions.value = []
-//   searchCve()
-// }
-</script>
+/* Logo */
+.logo-block {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  font-size: 3rem;
+  color: var(--accent);
+  filter: drop-shadow(0 0 18px rgba(249, 115, 22, 0.4));
+}
+
+.logo-text {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  margin: 0;
+  color: var(--text);
+}
+
+.logo-text span {
+  color: var(--accent);
+}
+
+/* Tagline */
+.tagline {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Search form */
+.search-form {
+  width: 100%;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-bar.focused {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 4px var(--accent-dim);
+}
+
+.bar-icon {
+  color: var(--text-subtle);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.bar-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+  padding: 0.35rem 0.25rem;
+}
+
+.bar-input::placeholder {
+  color: var(--text-subtle);
+}
+
+.bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.bar-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-subtle);
+  font-size: 1.05rem;
+  cursor: pointer;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-full);
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.bar-btn:hover {
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+
+.search-submit {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0.55rem 1.4rem;
+  border-radius: var(--radius-full);
+  transition: opacity 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.search-submit:hover {
+  opacity: 0.9;
+}
+
+.search-submit:active {
+  transform: scale(0.97);
+}
+
+/* Error */
+.error-msg {
+  color: #f87171;
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Chips */
+.chips-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chips-label {
+  color: var(--text-subtle);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-family: inherit;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.chip:hover {
+  border-color: var(--accent-border);
+  color: var(--text);
+  background: var(--accent-dim);
+}
+
+.chip-recent {
+  color: var(--text-subtle);
+}
+
+/* Stats row */
+.hero-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stat-card i {
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+</style>

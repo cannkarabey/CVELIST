@@ -5,6 +5,7 @@ import router from './router'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap'
 import 'bootstrap-icons/font/bootstrap-icons.css'
+import './assets/styles.css'
 
 import { Tooltip, Popover } from 'bootstrap'
 
