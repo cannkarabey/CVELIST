@@ -1,21 +1,19 @@
 <template>
-  <footer class="bg-light text-center text-muted py-3 mt-auto">
-    <div class="container">
-      <small>
-        &copy; {{ currentYear }} CVE Search App. All rights reserved.
-      </small>
-    </div>
+  <footer class="site-footer">
+    <small>© {{ currentYear }} CVESearch — Powered by Elasticsearch</small>
   </footer>
 </template>
 
-<script>
-export default {
-  name: 'FooterComponent',
-  data() {
-    return {
-      currentYear: new Date().getFullYear(),
-    };
-  },
-};
+<script setup>
+const currentYear = new Date().getFullYear()
 </script>
 
+<style scoped>
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 1rem 2rem;
+  text-align: center;
+  color: var(--text-subtle);
+  font-size: 0.8rem;
+}
+</style>
