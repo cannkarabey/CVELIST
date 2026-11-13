@@ -50,16 +50,8 @@
                 <span class="meta-value">{{ formatDate(cve.datePublished) }}</span>
               </div>
               <div class="meta-item">
-                <span class="meta-label">Data Version</span>
-                <span class="meta-value">{{ cve.dataVersion || '—' }}</span>
-              </div>
-              <div class="meta-item">
                 <span class="meta-label">Problem Type</span>
                 <span class="meta-value">{{ cve.problemType || '—' }}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Provider Org ID</span>
-                <span class="meta-value mono">{{ cve.providerOrgId || '—' }}</span>
               </div>
               <div v-if="cve.cvssBaseScore" class="meta-item">
                 <span class="meta-label">CVSS v3.1 Base Score</span>
@@ -110,7 +102,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import { getCveById } from '../api/cveApi.js'
 
 const route = useRoute()
 const cve = ref(null)
@@ -125,11 +117,11 @@ onMounted(async () => {
     return
   }
   try {
-    const res = await axios.get(`http://localhost:3000/api/cve/${cveId}`)
-    cve.value = res.data
+    cve.value = await getCveById(cveId)
+    if (!cve.value) error.value = `${cveId} was not found in the dataset.`
   } catch (err) {
     console.error(err)
-    error.value = 'Failed to load CVE details.'
+    error.value = err.message || 'Failed to load CVE details.'
   } finally {
     isLoading.value = false
   }

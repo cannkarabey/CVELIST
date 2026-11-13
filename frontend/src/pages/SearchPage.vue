@@ -65,15 +65,15 @@
     <div class="hero-stats">
       <div class="stat-card">
         <i class="bi bi-database-fill"></i>
-        <span>Elasticsearch Powered</span>
+        <span>Client-side Search</span>
       </div>
       <div class="stat-card">
         <i class="bi bi-shield-check"></i>
-        <span>Full CVE Database</span>
+        <span>Latest 2026 CVE Records</span>
       </div>
       <div class="stat-card">
         <i class="bi bi-lightning-charge-fill"></i>
-        <span>Real-time Search</span>
+        <span>Instant Local Results</span>
       </div>
     </div>
   </div>

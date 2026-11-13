@@ -157,7 +157,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import { searchCves } from '../api/cveApi.js'
 
 const route = useRoute()
 const searchTerm = ref('')
@@ -185,27 +185,29 @@ onMounted(async () => {
   }
 })
 
-const performSearch = async () => {
-  searchMode.value = 'simple'
-  currentPage.value = 1
+const runSearch = async (params, failMessage) => {
   isLoading.value = true
   error.value = ''
   try {
-    const res = await axios.post('http://localhost:3000/api/cve/search', {
-      query: searchTerm.value,
-      from: 0,
-      size: pageSize,
-      mode: 'simple'
-    })
-    cves.value = res.data.cves || []
-    totalResults.value = res.data.total || 0
-    totalPages.value = Math.ceil(totalResults.value / pageSize)
+    const res = await searchCves({ query: searchTerm.value, page: currentPage.value, pageSize, ...params })
+    cves.value = res.cves
+    totalResults.value = res.total
+    totalPages.value = res.totalPages
   } catch (err) {
     console.error(err)
-    error.value = 'Failed to fetch search results.'
+    cves.value = []
+    totalResults.value = 0
+    totalPages.value = 1
+    error.value = err.message || failMessage
   } finally {
     isLoading.value = false
   }
+}
+
+const performSearch = async () => {
+  searchMode.value = 'simple'
+  currentPage.value = 1
+  await runSearch({}, 'Failed to fetch search results.')
 }
 
 const applyFilters = async () => {
@@ -223,29 +225,12 @@ const resetFilters = () => {
 
 const performSearchWithFilters = async () => {
   searchMode.value = 'filtered'
-  isLoading.value = true
-  error.value = ''
-  try {
-    const res = await axios.post('http://localhost:3000/api/cve/search', {
-      query: searchTerm.value,
-      filters: {
-        state: selectedState.value !== 'all' ? selectedState.value : undefined,
-        startDate: startDate.value || undefined,
-        endDate: endDate.value || undefined
-      },
-      sortBy: sortBy.value !== 'default' ? sortBy.value : undefined,
-      from: (currentPage.value - 1) * pageSize,
-      size: pageSize
-    })
-    cves.value = res.data.cves || []
-    totalResults.value = res.data.total || 0
-    totalPages.value = Math.ceil(totalResults.value / pageSize)
-  } catch (err) {
-    console.error(err)
-    error.value = 'Failed to fetch filtered results.'
-  } finally {
-    isLoading.value = false
-  }
+  await runSearch({
+    state: selectedState.value !== 'all' ? selectedState.value : undefined,
+    startDate: startDate.value || undefined,
+    endDate: endDate.value || undefined,
+    sortBy: sortBy.value !== 'default' ? sortBy.value : undefined
+  }, 'Failed to fetch filtered results.')
 }
 
 const visiblePages = computed(() => {
