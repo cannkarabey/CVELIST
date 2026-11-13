@@ -6,7 +6,7 @@ Projeyi yalnızca Vue/Vite frontend olarak Vercel Free planında yayınlamak.
 
 - Backend, Docker, Elasticsearch ve Kibana production akışından çıkarılacak.
 - CVE kayıtları `frontend/public/data/cves.json` dosyasından okunacak.
-- Veri seti, kullanıcı tarafından belirlenecek CVE tarih/yıl aralığıyla sınırlı tutulacak.
+- Veri seti yalnızca `cves/2026/` klasöründeki CVE kayıtlarıyla sınırlı tutulacak.
 - Arama, filtreleme, sıralama, sayfalama ve detay görüntüleme tarayıcı tarafında yapılacak.
 - GitHub ve Vercel’e yalnızca seçilen veri seti gönderilecek; tam CVE arşivi gönderilmeyecek.
 
@@ -52,18 +52,17 @@ Değiştirilmesi gereken mevcut API çağrıları:
 
 Bu dosyalar local Elasticsearch/backend geliştirmesi için korunabilir. Frontend-only deployment’ın parçası yapılmayacak.
 
-## Uygulama ön koşulu: veri aralığının belirlenmesi
+## Uygulama ön koşulu: veri kapsamının belirlenmesi
 
-Kod değişikliğine başlamadan önce kesin veri aralığı belirlenmeli:
+Bu deployment için veri kapsamı kesinleştirilmiştir:
 
-1. Başlangıç ve bitiş yılı veya tarihini netleştir.
-2. Aralığın dahil olma kuralını belirle:
-   - başlangıç ve bitiş dahil,
-   - yalnızca belirli yıllar,
-   - veya `datePublished` alanına göre tarih aralığı.
-3. Arşivde bulunmayan, `datePublished` alanı boş veya geçersiz kayıtların kuralını belirle.
-4. Veri seti boyutu ve yaklaşık kayıt sayısını ölç.
-5. Seçim kesinleşmeden `frontend/public/data/cves.json` oluşturma ve commit etme.
+- Kaynak klasör: `cves/2026/`
+- Kaynak kapsamı: 2026 klasörü altındaki tüm `.json` dosyaları
+- Başka yıl klasörleri: dahil edilmeyecek
+- Ham kaynak arşivi: `cves/` altında kalacak ve Git'e gönderilmeyecek
+- Yayınlanacak çıktı: normalize edilmiş `frontend/public/data/cves.json`
+
+Mevcut local ölçüm yaklaşık 91.051 kayıt ve 923 MB ham veri göstermektedir. Bu boyut ham JSON dosyalarının frontend'e doğrudan kopyalanamayacağını gösterir. `cves/2026/` içindeki dosyalar tek tek public klasöre taşınmayacak; yalnızca gerekli frontend alanları seçilerek tek ve optimize edilmiş `cves.json` üretilecektir.
 
 ## Beş aşamalı uygulama planı
 
@@ -77,7 +76,7 @@ Kullanıcının belirleyeceği tarih/yıl aralığındaki CVE kayıtlarını se�
 
 1. Resmi CVE JSON kaynağından `cvelistV5` verisini temin et.
 2. Kaynak arşivi localde tut; GitHub’a gönderme.
-3. `datePublished` veya kullanıcı tarafından onaylanan tarih alanına göre kayıtları filtrele.
+3. Yalnızca `cves/2026/` klasörünü tara; `cves/1999/`, `cves/2000/` ve diğer yıl klasörlerini dışarıda bırak.
 4. Her kayıt için frontend’in gerçekten kullandığı alanları koru:
    - CVE ID
    - başlık
@@ -90,8 +89,9 @@ Kullanıcının belirleyeceği tarih/yıl aralığındaki CVE kayıtlarını se�
    - CVSS bilgisi
 5. Gereksiz büyük veya tekrar eden alanları ayıkla.
 6. Normalize edilmiş kayıtları `frontend/public/data/cves.json` içine koy.
-7. JSON’un geçerli olduğunu, tekrar eden CVE ID bulunmadığını ve beklenen aralık dışında kayıt olmadığını doğrula.
-8. Kayıt sayısını ve dosya boyutunu kaydet; Vercel/Git sınırlarına yaklaşılması halinde veri kapsamını daralt veya harici statik depolama seçeneğini değerlendir.
+7. JSON'un geçerli olduğunu, tekrar eden CVE ID bulunmadığını ve tüm kayıtların 2026 veri setinden geldiğini doğrula.
+8. Kayıt sayısını ve çıktı dosya boyutunu kaydet.
+9. Çıktı dosyası Vercel/Git sınırlarına yaklaşırsa alanları daha da azalt veya dataset'i parçalara böl; ham 923 MB arşivi kesinlikle deploy etme.
 
 ### Beklenen çıktı
 
@@ -354,7 +354,7 @@ Ham CVE v5 kayıtları ile frontend’in mevcut Elasticsearch normalize çıktı
 
 ## Son teslim kontrol listesi
 
-- [ ] CVE tarih/yıl aralığı kullanıcı tarafından kesinleştirildi.
+- [ ] Yalnızca `cves/2026/` klasörünün kullanılacağı kesinleştirildi.
 - [ ] Dataset resmi kaynaktan alındı.
 - [ ] Dataset filtrelendi ve normalize edildi.
 - [ ] `frontend/public/data/cves.json` oluşturuldu.
